@@ -12,6 +12,7 @@ import { Models } from 'appwrite';
 export default function Header() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -37,6 +38,11 @@ export default function Header() {
     checkUser();
   }, []);
 
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [router]);
+
   const handleLogout = async () => {
     try {
       await account.deleteSession('current');
@@ -53,6 +59,13 @@ export default function Header() {
   }
 
   const logoSrc = theme === 'dark' ? '/logo.png' : '/logo_whitemode.png';
+
+  const navigationLinks = [
+    { href: '/docs', label: 'Documentation' },
+    { href: '/components', label: 'Components' },
+    { href: '/examples', label: 'Examples' },
+    { href: 'https://github.com/Dyplay/foundation', label: 'GitHub' }
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -71,12 +84,7 @@ export default function Header() {
 
         {/* Main Navigation */}
         <nav className="hidden md:flex items-center space-x-6">
-          {[
-            { href: '/docs', label: 'Documentation' },
-            { href: '/components', label: 'Components' },
-            { href: '/examples', label: 'Examples' },
-            { href: 'https://github.com/Dyplay/foundation', label: 'GitHub' }
-          ].map((link) => (
+          {navigationLinks.map((link) => (
             <Link 
               key={link.href} 
               href={link.href} 
@@ -90,6 +98,43 @@ export default function Header() {
             </Link>
           ))}
         </nav>
+
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="md:hidden ml-auto mr-4 p-2 rounded-md hover:bg-accent transition-colors"
+          aria-label="Toggle menu"
+        >
+          <motion.div
+            className="w-6 h-5 flex flex-col justify-between"
+            animate={isMobileMenuOpen ? "open" : "closed"}
+          >
+            <motion.span
+              className="w-full h-0.5 bg-foreground rounded-full origin-center"
+              variants={{
+                closed: { rotate: 0, y: 0 },
+                open: { rotate: 45, y: 10 }
+              }}
+              transition={{ duration: 0.2 }}
+            />
+            <motion.span
+              className="w-full h-0.5 bg-foreground rounded-full"
+              variants={{
+                closed: { opacity: 1 },
+                open: { opacity: 0 }
+              }}
+              transition={{ duration: 0.1 }}
+            />
+            <motion.span
+              className="w-full h-0.5 bg-foreground rounded-full origin-center"
+              variants={{
+                closed: { rotate: 0, y: 0 },
+                open: { rotate: -45, y: -10 }
+              }}
+              transition={{ duration: 0.2 }}
+            />
+          </motion.div>
+        </button>
 
         <div className="flex flex-1 items-center justify-end space-x-4">
           {/* Search Bar */}
@@ -152,95 +197,262 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Profile Dropdown or Sign In Button */}
-          {isLoading ? (
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
-          ) : user ? (
-            <div className="relative">
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center space-x-2 rounded-md border border-input bg-background px-4 py-2 hover:bg-accent transition-colors"
-              >
-                <div className="relative h-6 w-6 overflow-hidden rounded-full">
-                  {user.prefs?.avatar ? (
-                    <Image
-                      src={user.prefs.avatar}
-                      alt="Profile"
-                      fill
-                      className="object-cover"
-                      sizes="24px"
-                      priority
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-primary/10 flex items-center justify-center text-primary font-medium">
-                      {user.name?.charAt(0) || user.email?.charAt(0)}
-                    </div>
-                  )}
-                </div>
-                <span className="text-sm font-medium">{user.name || user.email}</span>
-                <motion.svg
-                  animate={{ rotate: isProfileOpen ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+          {/* Profile Dropdown or Sign In Button - Hidden on Mobile */}
+          <div className="hidden md:block">
+            {isLoading ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
+            ) : user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center space-x-2 rounded-md border border-input bg-background px-4 py-2 hover:bg-accent transition-colors"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </motion.svg>
-              </button>
-
-              {/* Dropdown Menu */}
-              <AnimatePresence>
-                {isProfileOpen && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
+                  <div className="relative h-6 w-6 overflow-hidden rounded-full">
+                    {user.prefs?.avatar ? (
+                      <Image
+                        src={user.prefs.avatar}
+                        alt="Profile"
+                        fill
+                        className="object-cover"
+                        sizes="24px"
+                        priority
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                        {user.name?.charAt(0) || user.email?.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-sm font-medium">{user.name || user.email}</span>
+                  <motion.svg
+                    animate={{ rotate: isProfileOpen ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-2 w-48 rounded-md border border-border bg-background shadow-lg"
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <div className="py-1">
-                      <Link
-                        href="/dashboard"
-                        className="block px-4 py-2 text-sm hover:bg-accent transition-colors"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        Dashboard
-                      </Link>
-                      <Link
-                        href="/profile"
-                        className="block px-4 py-2 text-sm hover:bg-accent transition-colors"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        Profile Settings
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full px-4 py-2 text-sm text-left text-destructive hover:bg-accent transition-colors"
-                      >
-                        Sign out
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ) : (
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
-            >
-              Sign in
-            </Link>
-          )}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </motion.svg>
+                </button>
+
+                {/* Dropdown Menu */}
+                <AnimatePresence>
+                  {isProfileOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute right-0 mt-2 w-48 rounded-md border border-border bg-background shadow-lg"
+                    >
+                      <div className="py-1">
+                        <Link
+                          href="/dashboard"
+                          className="block px-4 py-2 text-sm hover:bg-accent transition-colors"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          Dashboard
+                        </Link>
+                        <Link
+                          href="/profile"
+                          className="block px-4 py-2 text-sm hover:bg-accent transition-colors"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          Profile Settings
+                        </Link>
+                        <button
+                          onClick={handleLogout}
+                          className="block w-full px-4 py-2 text-sm text-left text-destructive hover:bg-accent transition-colors"
+                        >
+                          Sign out
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
+              >
+                Sign in
+              </Link>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="md:hidden border-t border-border bg-background"
+          >
+            <nav className="container py-4">
+              <ul className="space-y-4">
+                {navigationLinks.map((link) => (
+                  <motion.li
+                    key={link.href}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Link
+                      href={link.href}
+                      className="block text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  </motion.li>
+                ))}
+
+                {/* Search Button */}
+                <motion.li
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2, delay: 0.2 }}
+                >
+                  <div className="pt-4 mt-4 border-t border-border">
+                    <button
+                      onClick={() => setIsSearchOpen(!isSearchOpen)}
+                      className="flex items-center w-full px-4 py-2 text-lg font-medium hover:text-primary transition-colors"
+                    >
+                      <svg
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      Search
+                    </button>
+                    <AnimatePresence>
+                      {isSearchOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-4 pt-2">
+                            <div className="relative">
+                              <input
+                                type="text"
+                                placeholder="Search documentation..."
+                                className="w-full h-10 pl-10 pr-4 rounded-md border border-input bg-background text-sm transition-colors
+                                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
+                                  placeholder:text-muted-foreground"
+                                autoFocus
+                              />
+                              <svg
+                                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                              </svg>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.li>
+
+                {/* User Account Section */}
+                <motion.li
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2, delay: 0.3 }}
+                  className="pt-4 mt-4 border-t border-border"
+                >
+                  {isLoading ? (
+                    <div className="flex justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                    </div>
+                  ) : user ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center px-4 py-2">
+                        <div className="relative h-10 w-10 overflow-hidden rounded-full mr-3">
+                          {user.prefs?.avatar ? (
+                            <Image
+                              src={user.prefs.avatar}
+                              alt="Profile"
+                              fill
+                              className="object-cover"
+                              sizes="40px"
+                              priority
+                            />
+                          ) : (
+                            <div className="h-full w-full bg-primary/10 flex items-center justify-center text-primary text-lg font-medium">
+                              {user.name?.charAt(0) || user.email?.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-medium">{user.name || 'User'}</div>
+                          <div className="text-sm text-muted-foreground">{user.email}</div>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Link
+                          href="/dashboard"
+                          className="block px-4 py-2 text-lg font-medium hover:text-primary transition-colors"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Dashboard
+                        </Link>
+                        <Link
+                          href="/profile"
+                          className="block px-4 py-2 text-lg font-medium hover:text-primary transition-colors"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Profile Settings
+                        </Link>
+                        <button
+                          onClick={() => {
+                            handleLogout();
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="block w-full text-left px-4 py-2 text-lg font-medium text-destructive hover:text-destructive/80 transition-colors"
+                        >
+                          Sign out
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Link
+                      href="/login"
+                      className="block px-4 py-2 text-lg font-medium hover:text-primary transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Sign in
+                    </Link>
+                  )}
+                </motion.li>
+              </ul>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 } 
