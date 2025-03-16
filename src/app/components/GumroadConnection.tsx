@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getGumroadConnection, disconnectGumroad } from '@/lib/gumroad';
 import { getGumroadAuthUrl } from '@/lib/gumroad';
+import { Models } from 'appwrite';
 
 interface GumroadConnectionData {
   gumroad_name: string;
@@ -11,6 +12,12 @@ interface GumroadConnectionData {
   $createdAt?: string;
   $updatedAt?: string;
   user_id?: string;
+}
+
+function isGumroadConnectionData(data: unknown): data is GumroadConnectionData {
+  if (!data || typeof data !== 'object') return false;
+  const d = data as any;
+  return typeof d.gumroad_name === 'string' && typeof d.gumroad_email === 'string';
 }
 
 export default function GumroadConnection({ userId }: { userId: string }) {
@@ -27,8 +34,13 @@ export default function GumroadConnection({ userId }: { userId: string }) {
       setIsLoading(true);
       setError(null);
       const data = await getGumroadConnection(userId);
-      // Cast the document to GumroadConnectionData type
-      setConnection(data as GumroadConnectionData);
+      
+      // Type guard to ensure data has the required properties
+      if (isGumroadConnectionData(data)) {
+        setConnection(data);
+      } else {
+        throw new Error('Invalid Gumroad connection data received');
+      }
     } catch (err: any) {
       console.error('Error loading Gumroad connection:', err);
       setError(err.message || 'Failed to load Gumroad connection');
