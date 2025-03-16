@@ -1,22 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { getGumroadAuthUrl, getGumroadConnection, disconnectGumroad } from '@/lib/gumroad';
-import { motion, AnimatePresence } from 'framer-motion';
-
-interface GumroadConnectionProps {
-  userId: string;
-}
+import { useEffect, useState } from 'react';
+import { getGumroadConnection, disconnectGumroad } from '@/lib/gumroad';
+import { getGumroadAuthUrl } from '@/lib/gumroad';
 
 interface GumroadConnectionData {
-  $id: string;
   gumroad_name: string;
   gumroad_email: string;
-  gumroad_url?: string;
+  $id?: string;
+  $createdAt?: string;
+  $updatedAt?: string;
+  user_id?: string;
 }
 
-export default function GumroadConnection({ userId }: GumroadConnectionProps) {
+export default function GumroadConnection({ userId }: { userId: string }) {
   const [connection, setConnection] = useState<GumroadConnectionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,29 +27,14 @@ export default function GumroadConnection({ userId }: GumroadConnectionProps) {
       setIsLoading(true);
       setError(null);
       const data = await getGumroadConnection(userId);
-      setConnection(data);
+      // Cast the document to GumroadConnectionData type
+      setConnection(data as GumroadConnectionData);
     } catch (err: any) {
       console.error('Error loading Gumroad connection:', err);
       setError(err.message || 'Failed to load Gumroad connection');
+      setConnection(null);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleConnect = () => {
-    try {
-      // Generate a random state
-      const state = Math.random().toString(36).substring(2, 15);
-      
-      // Store it in localStorage before redirect
-      window.localStorage.setItem('gumroad_oauth_state', state);
-      
-      // Get the auth URL and redirect
-      const authUrl = getGumroadAuthUrl(state);
-      window.location.href = authUrl;
-    } catch (err: any) {
-      console.error('Error initiating Gumroad connection:', err);
-      setError(err.message || 'Failed to initiate Gumroad connection');
     }
   };
 
@@ -72,76 +54,57 @@ export default function GumroadConnection({ userId }: GumroadConnectionProps) {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-4">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center p-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 text-sm text-destructive bg-destructive/10 rounded-md">
+        {error}
+      </div>
+    );
+  }
+
+  if (!connection) {
+    return (
+      <div className="p-4 space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Connect your Gumroad account to manage your products and sales.
+        </p>
+        <a
+          href={getGumroadAuthUrl()}
+          className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors 
+            focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring 
+            disabled:pointer-events-none disabled:opacity-50 
+            bg-primary text-primary-foreground shadow hover:bg-primary/90 
+            h-9 px-4 py-2"
+        >
+          Connect Gumroad
+        </a>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <AnimatePresence>
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="p-3 rounded-md bg-destructive/10 text-destructive text-sm"
-          >
-            {error}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {connection ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="p-4 rounded-lg border bg-card"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="rounded-full bg-[#FF90E8]/10 p-2">
-                <Image
-                  src="/gumroad-logo.svg"
-                  alt="Gumroad"
-                  width={20}
-                  height={20}
-                  className="w-5 h-5"
-                />
-              </div>
-              <div>
-                <p className="font-medium">{connection.gumroad_name}</p>
-                <p className="text-sm text-muted-foreground">{connection.gumroad_email}</p>
-              </div>
-            </div>
-            <button
-              onClick={handleDisconnect}
-              disabled={isLoading}
-              className="text-sm text-destructive hover:text-destructive/80 transition-colors"
-            >
-              Disconnect
-            </button>
-          </div>
-        </motion.div>
-      ) : (
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          onClick={handleConnect}
-          disabled={isLoading}
-          className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-[#FF90E8] text-white rounded-md font-medium hover:bg-[#FF90E8]/90 transition-colors"
-        >
-          <Image
-            src="/gumroad-logo.svg"
-            alt="Gumroad"
-            width={20}
-            height={20}
-            className="w-5 h-5"
-          />
-          <span>Connect Gumroad</span>
-        </motion.button>
-      )}
+    <div className="p-4 space-y-4">
+      <div className="flex flex-col space-y-1">
+        <p className="text-sm font-medium">Connected Account</p>
+        <p className="text-sm text-muted-foreground">{connection.gumroad_name}</p>
+        <p className="text-sm text-muted-foreground">{connection.gumroad_email}</p>
+      </div>
+      <button
+        onClick={handleDisconnect}
+        className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors 
+          focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring 
+          disabled:pointer-events-none disabled:opacity-50 
+          border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground 
+          h-9 px-4 py-2"
+      >
+        Disconnect
+      </button>
     </div>
   );
 } 
