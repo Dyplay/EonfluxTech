@@ -50,6 +50,23 @@ export default function GumroadConnection({ userId }: { userId: string }) {
     }
   };
 
+  const handleConnect = () => {
+    try {
+      // Generate a random state
+      const state = Math.random().toString(36).substring(2, 15);
+      
+      // Store it in localStorage before redirect
+      window.localStorage.setItem('gumroad_oauth_state', state);
+      
+      // Get the auth URL with state
+      const authUrl = getGumroadAuthUrl(state);
+      window.location.href = authUrl;
+    } catch (err: any) {
+      console.error('Error initiating Gumroad connection:', err);
+      setError(err.message || 'Failed to initiate Gumroad connection');
+    }
+  };
+
   const handleDisconnect = async () => {
     try {
       setIsLoading(true);
@@ -86,8 +103,8 @@ export default function GumroadConnection({ userId }: { userId: string }) {
         <p className="text-sm text-muted-foreground">
           Connect your Gumroad account to manage your products and sales.
         </p>
-        <a
-          href={getGumroadAuthUrl()}
+        <button
+          onClick={handleConnect}
           className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors 
             focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring 
             disabled:pointer-events-none disabled:opacity-50 
@@ -95,7 +112,7 @@ export default function GumroadConnection({ userId }: { userId: string }) {
             h-9 px-4 py-2"
         >
           Connect Gumroad
-        </a>
+        </button>
       </div>
     );
   }
