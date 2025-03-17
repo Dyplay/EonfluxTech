@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "./components/ThemeProvider";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
+import SimpleTranslator from "@/app/components/SimpleTranslator";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,6 +25,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider>
+          <SimpleTranslator />
           <Header />
           <div className="relative">
             <main className="flex-1">

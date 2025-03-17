@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { FiGithub, FiExternalLink, FiCode, FiPackage, FiServer } from 'react-icons/fi';
+import { FiGithub, FiExternalLink, FiCode, FiPackage, FiServer, FiDownload } from 'react-icons/fi';
 import { fetchOrganizationRepos } from '@/lib/github';
 import Script from 'next/script';
 
@@ -260,8 +260,18 @@ export default async function Home() {
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="text-primary hover:text-primary/80 transition-colors"
+                          title="View Repository"
                         >
                           <FiGithub className="h-5 w-5" />
+                        </Link>
+                        <Link 
+                          href={`${repo.html_url}/releases`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          title="Download Releases"
+                        >
+                          <FiDownload className="h-5 w-5" />
                         </Link>
                         {repo.homepage && (
                           <Link 
@@ -269,6 +279,7 @@ export default async function Home() {
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="text-primary hover:text-primary/80 transition-colors"
+                            title="View Live Demo"
                           >
                             <FiExternalLink className="h-5 w-5" />
                           </Link>

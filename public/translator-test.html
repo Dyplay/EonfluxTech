@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Translator Test</title>
+    <script src="/dist/widget.js"></script>
+</head>
+<body>
+    <div class="website-translator"></div>
+    
+    <h1>Website Translator Test Page</h1>
+    
+    <div>
+        <h2>This content should be translatable</h2>
+        <p>
+            This is a test page to verify that the Website Translator is working correctly.
+            The text on this page should be translatable when you select a different language
+            from the translator widget at the top of the page.
+        </p>
+        <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget
+            aliquam ultricies, nunc nisl aliquet nunc, quis aliquam nisl nunc quis nisl.
+            Donec euismod, nisl eget aliquam ultricies, nunc nisl aliquet nunc, quis aliquam nisl nunc quis nisl.
+        </p>
+    </div>
+    
+    <div>
+        <h2>This content should NOT be translatable</h2>
+        <p translate="no">
+            This paragraph has the translate="no" attribute, so it should not be translated
+            by the Website Translator widget. It should remain in the original language
+            regardless of which language is selected.
+        </p>
+    </div>
+    
+    <div>
+        <h2>Content with specific language</h2>
+        <p lang="fr">
+            Ce paragraphe est en français. Il a l'attribut lang="fr", donc il devrait
+            être reconnu comme du français par le traducteur de site Web.
+        </p>
+        <p lang="es">
+            Este párrafo está en español. Tiene el atributo lang="es", por lo que debería
+            ser reconocido como español por el traductor del sitio web.
+        </p>
+    </div>
+
+    <script>
+        // Configure
+        WebsiteTranslator.Options.api.clientId = "demo";
+        WebsiteTranslator.Options.api.url = "https://letsmt.eu/ws/v2/translation";
+        WebsiteTranslator.Options.ui.toolbarPosition = "top";
+        WebsiteTranslator.Options.ui.layout = "menu";
+        WebsiteTranslator.Options.ui.translate = "target";
+        
+        // Initialize the translator
+        WebsiteTranslator.Initialize();
+    </script>
+</body>
+</html> 

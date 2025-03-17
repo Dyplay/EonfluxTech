@@ -69,6 +69,7 @@ export default function Header() {
     { href: '/components', label: 'Components' },
     { href: '/products', label: 'Products' },
     { href: '/examples', label: 'Examples' },
+    { href: '/translator-test', label: 'Translator Test' },
     { href: 'https://github.com/EonfluxTech-com', label: 'GitHub' }
   ];
 
@@ -204,7 +205,7 @@ export default function Header() {
                 >
                   <input
                     type="text"
-                    placeholder="Search documentation..."
+                    placeholder="Search..."
                     className="w-full h-9 rounded-md border border-input px-3 py-1
                       text-sm shadow-sm transition-colors
                       focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
@@ -320,7 +321,7 @@ export default function Header() {
                             className="block px-4 py-2 text-sm text-foreground dark:text-gray-100 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
                             onClick={() => setIsProfileOpen(false)}
                           >
-                            Admin Dashboard
+                            Admin
                           </Link>
                         )}
                         
@@ -328,7 +329,7 @@ export default function Header() {
                           onClick={handleLogout}
                           className="block w-full text-left px-4 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
                         >
-                          Sign out
+                          Sign Out
                         </button>
                       </div>
                     </motion.div>
@@ -340,7 +341,7 @@ export default function Header() {
                 href="/login"
                 className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
               >
-                Sign in
+                Sign In
               </Link>
             )}
           </div>
@@ -412,7 +413,7 @@ export default function Header() {
                             <div className="relative">
                               <input
                                 type="text"
-                                placeholder="Search documentation..."
+                                placeholder="Search..."
                                 className="w-full h-10 pl-10 pr-4 rounded-md border border-input dark:border-gray-600 bg-background dark:bg-gray-700 text-foreground dark:text-gray-100 text-sm transition-colors
                                   focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:focus-visible:ring-gray-500
                                   placeholder:text-muted-foreground dark:placeholder:text-gray-400"
@@ -534,7 +535,7 @@ export default function Header() {
                             className="flex items-center px-4 py-2 text-sm text-foreground dark:text-gray-100 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
                             onClick={() => setIsMobileMenuOpen(false)}
                           >
-                            Admin Dashboard
+                            Admin
                           </Link>
                         )}
                         
@@ -542,7 +543,7 @@ export default function Header() {
                           onClick={handleLogout}
                           className="flex w-full items-center px-4 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
                         >
-                          Sign out
+                          Sign Out
                         </button>
                       </div>
                     </div>
@@ -552,7 +553,7 @@ export default function Header() {
                       className="block px-4 py-2 text-lg font-medium text-foreground dark:text-gray-100 hover:text-primary transition-colors"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Sign in
+                      Sign In
                     </Link>
                   )}
                 </motion.li>

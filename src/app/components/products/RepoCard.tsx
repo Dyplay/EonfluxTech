@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { FiStar, FiGitBranch, FiExternalLink, FiCode, FiCalendar } from 'react-icons/fi';
+import { FiStar, FiGitBranch, FiExternalLink, FiCode, FiCalendar, FiDownload } from 'react-icons/fi';
 import { GitHubRepo } from '@/lib/github';
 
 interface RepoCardProps {
@@ -121,17 +121,29 @@ export default function RepoCard({ repo, index }: RepoCardProps) {
           View Code
         </Link>
         
-        {repo.homepage && (
+        <div className="flex space-x-4">
           <Link 
-            href={repo.homepage} 
+            href={`${repo.html_url}/releases`}
             target="_blank" 
             rel="noopener noreferrer"
             className="flex items-center text-sm font-medium text-primary hover:text-primary/80 transition-colors"
           >
-            <FiExternalLink className="mr-1 h-4 w-4" />
-            Live Demo
+            <FiDownload className="mr-1 h-4 w-4" />
+            Download
           </Link>
-        )}
+          
+          {repo.homepage && (
+            <Link 
+              href={repo.homepage} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              <FiExternalLink className="mr-1 h-4 w-4" />
+              Live Demo
+            </Link>
+          )}
+        </div>
       </div>
     </motion.div>
   );
