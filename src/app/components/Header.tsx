@@ -67,11 +67,10 @@ export default function Header() {
   const logoSrc = theme === 'dark' ? '/logo.png' : '/logo_whitemode.png';
 
   const navigationLinks = [
-    { href: '/docs', label: t('common.documentation') },
-    { href: '/components', label: t('common.components') },
-    { href: '/products', label: t('common.products') },
-    { href: '/examples', label: t('common.examples') },
-    { href: '/translator-test', label: t('common.translator_test') },
+    { href: '/', label: 'Home' },
+    { href: '/products', label: 'Products' },
+    { href: '/shop', label: 'Shop' },
+    { href: '/about', label: 'About' },
     { href: 'https://github.com/EonfluxTech-com', label: 'GitHub' }
   ];
 
@@ -264,9 +263,24 @@ export default function Header() {
                     className="flex items-center space-x-2 p-1 rounded-md hover:bg-accent transition-colors"
                     aria-label={t('common.toggle_profile')}
                   >
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
-                      {user.name?.charAt(0) || user.email?.charAt(0) || '?'}
-                    </div>
+                    {user.prefs?.avatar ? (
+                      <div className="w-8 h-8 relative">
+                        <Image
+                          src={user.prefs.avatar}
+                          alt={user.name || 'Profile'}
+                          fill
+                          className="rounded-full object-cover"
+                          sizes="32px"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                        {user.name?.charAt(0) || user.email?.charAt(0) || '?'}
+                      </div>
+                    )}
+                    <span className="hidden md:inline text-sm font-medium">
+                      {user.name || t('common.user')}
+                    </span>
                   </button>
                   
                   <AnimatePresence>

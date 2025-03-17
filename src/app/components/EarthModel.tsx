@@ -175,6 +175,7 @@ export default function EarthModel() {
           <Model />
           <OrbitControls 
             enableZoom={false}
+            enablePan={false}
             autoRotate={true}
             autoRotateSpeed={0.5}
             minPolarAngle={Math.PI / 3}

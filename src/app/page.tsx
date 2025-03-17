@@ -357,6 +357,14 @@ export default async function Home() {
                     </div>
                   </li>
                 </ul>
+                <div className="mt-8">
+                  <Link 
+                    href="/about" 
+                    className="inline-flex items-center px-6 py-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                  >
+                    Learn More
+                  </Link>
+                </div>
               </div>
               <div className="relative h-[400px] w-full rounded-lg overflow-hidden">
                 <div className="absolute inset-0">

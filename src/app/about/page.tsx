@@ -26,62 +26,34 @@ export default function AboutPage() {
   // Team members data
   const teamMembers = [
     {
-      name: "Alex Johnson",
+      name: "Marco Rivero Alvarez",
       role: "Founder & Lead Developer",
-      image: "/team/placeholder-1.jpg",
-      bio: "Alex has over 10 years of experience in software development with a focus on open-source technologies.",
+      image: "/team/dyplay_0e39c814ab49bf772c9f099a921d623d.jpg",
+      bio: "Loves Programming Website with Next.js and Tailwind CSS and loves to learn new things.",
       links: {
-        github: "https://github.com/",
-        twitter: "https://twitter.com/",
-        linkedin: "https://linkedin.com/in/"
+        github: "https://github.com/dyplay",
+        twitter: "https://twitter.com/dyplayr",
+        linkedin: "https://linkedin.com/in/marco-rivero-alvarez"
       }
     },
     {
-      name: "Sam Rivera",
-      role: "UI/UX Designer",
-      image: "/team/placeholder-2.jpg",
-      bio: "Sam brings creative vision to our projects with expertise in user experience and interface design.",
+      name: "Lauren Derrick",
+      role: "Developer",
+      image: "/team/Fqll3n_ang3l_jinx-goggles.gif",
+      bio: "Major fan of Jinx from arcane, And loves coding!",
       links: {
-        github: "https://github.com/",
-        twitter: "https://twitter.com/",
-        linkedin: "https://linkedin.com/in/"
+        github: "https://github.com/DreamyzLovez"
       }
     },
-    {
-      name: "Taylor Kim",
-      role: "Backend Developer",
-      image: "/team/placeholder-3.jpg",
-      bio: "Taylor specializes in building robust and scalable backend systems with a focus on performance.",
-      links: {
-        github: "https://github.com/",
-        twitter: "https://twitter.com/",
-        linkedin: "https://linkedin.com/in/"
-      }
-    }
   ];
   
   // Timeline events
   const timelineEvents = [
     {
-      year: "2021",
-      title: "Foundation",
-      description: "EonfluxTech was founded with a vision to create accessible open-source software."
+      year: "2025",
+      title: "EonfluxTech Idea",
+      description: "EonfluxTech was founded with a vision to create accessible open-source software. This is where the journey begins."
     },
-    {
-      year: "2022",
-      title: "First Major Release",
-      description: "Launched our first major open-source project, gaining traction in the developer community."
-    },
-    {
-      year: "2023",
-      title: "Community Growth",
-      description: "Expanded our community of contributors and reached 1,000+ GitHub stars across projects."
-    },
-    {
-      year: "2024",
-      title: "New Horizons",
-      description: "Focusing on innovative solutions and expanding our product offerings to new domains."
-    }
   ];
   
   return (
@@ -139,7 +111,7 @@ export default function AboutPage() {
               className="relative h-[400px] rounded-lg overflow-hidden shadow-xl"
             >
               <Image
-                src="/about/story-image.jpg"
+                src="/about_hero2.jpg"
                 alt="Our journey"
                 fill
                 className="object-cover"
@@ -353,20 +325,28 @@ export default function AboutPage() {
                         sizes="(max-width: 768px) 100vw, 33vw"
                       />
                     </div>
-                    <div className="p-6">
-                      <h4 className="text-xl font-semibold mb-1">{member.name}</h4>
-                      <p className="text-primary text-sm mb-3">{member.role}</p>
-                      <p className="text-muted-foreground mb-4">{member.bio}</p>
-                      <div className="flex space-x-3">
-                        <Link href={member.links.github} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                          <FiGithub className="h-5 w-5" />
-                        </Link>
-                        <Link href={member.links.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                          <FiTwitter className="h-5 w-5" />
-                        </Link>
-                        <Link href={member.links.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                          <FiLinkedin className="h-5 w-5" />
-                        </Link>
+                    <div className="p-6 flex flex-col h-[calc(100%-16rem)]">
+                      <div className="flex-grow">
+                        <h4 className="text-xl font-semibold mb-1">{member.name}</h4>
+                        <p className="text-primary text-sm mb-3">{member.role}</p>
+                        <p className="text-muted-foreground">{member.bio}</p>
+                      </div>
+                      <div className="flex space-x-3 pt-4 mt-auto">
+                        {member.links.github && (
+                          <Link href={member.links.github} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                            <FiGithub className="h-5 w-5" />
+                          </Link>
+                        )}
+                        {member.links.twitter && (
+                          <Link href={member.links.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                            <FiTwitter className="h-5 w-5" />
+                          </Link>
+                        )}
+                        {member.links.linkedin && (
+                          <Link href={member.links.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                            <FiLinkedin className="h-5 w-5" />
+                          </Link>
+                        )}
                       </div>
                     </div>
                   </motion.div>

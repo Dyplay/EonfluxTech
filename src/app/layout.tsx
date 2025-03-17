@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import SimpleLanguageSwitcher from "@/app/components/SimpleLanguageSwitcher";
 import { TranslationProvider } from "@/app/components/TranslationProvider";
 import { ThemeProvider } from "@/app/components/ThemeProvider";
 import Header from "@/app/components/Header";
@@ -32,7 +31,6 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
-            <SimpleLanguageSwitcher />
           </TranslationProvider>
         </ThemeProvider>
       </body>
