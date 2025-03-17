@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./components/ThemeProvider";
-import { ThemeToggle } from "./components/ThemeToggle";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 
@@ -27,9 +26,6 @@ export default function RootLayout({
         <ThemeProvider>
           <Header />
           <div className="relative">
-            <div className="fixed top-4 right-4 z-50">
-              <ThemeToggle />
-            </div>
             <main className="flex-1">
               {children}
             </main>

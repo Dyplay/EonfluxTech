@@ -16,6 +16,7 @@ export default function Header() {
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
 
@@ -28,6 +29,9 @@ export default function Header() {
       try {
         const userData = await account.get();
         setUser(userData);
+        
+        // Check if user is admin
+        setIsAdmin(userData?.prefs?.admin === true || userData?.prefs?.admin === 'true');
       } catch (error) {
         console.error('Error fetching user:', error);
       } finally {
@@ -63,8 +67,9 @@ export default function Header() {
   const navigationLinks = [
     { href: '/docs', label: 'Documentation' },
     { href: '/components', label: 'Components' },
+    { href: '/products', label: 'Products' },
     { href: '/examples', label: 'Examples' },
-    { href: 'https://github.com/Dyplay/foundation', label: 'GitHub' }
+    { href: 'https://github.com/EonfluxTech-com', label: 'GitHub' }
   ];
 
   return (
@@ -137,6 +142,55 @@ export default function Header() {
         </button>
 
         <div className="flex flex-1 items-center justify-end space-x-4">
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-md hover:bg-accent transition-colors"
+            aria-label={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            <AnimatePresence mode="wait">
+              {theme === 'dark' ? (
+                <motion.svg
+                  key="sun"
+                  initial={{ scale: 0, rotate: -90 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0, rotate: 90 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
+                </motion.svg>
+              ) : (
+                <motion.svg
+                  key="moon"
+                  initial={{ scale: 0, rotate: 90 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0, rotate: -90 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                  />
+                </motion.svg>
+              )}
+            </AnimatePresence>
+          </button>
+
           {/* Search Bar */}
           <div className="relative hidden md:flex items-center">
             <AnimatePresence>
@@ -249,26 +303,30 @@ export default function Header() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute right-0 mt-2 w-48 rounded-md border border-border bg-background shadow-lg"
+                      className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-card dark:bg-gray-800 border border-border dark:border-gray-700 overflow-hidden z-50"
                     >
                       <div className="py-1">
                         <Link
-                          href="/dashboard"
-                          className="block px-4 py-2 text-sm hover:bg-accent transition-colors"
-                          onClick={() => setIsProfileOpen(false)}
-                        >
-                          Dashboard
-                        </Link>
-                        <Link
                           href="/profile"
-                          className="block px-4 py-2 text-sm hover:bg-accent transition-colors"
+                          className="block px-4 py-2 text-sm text-foreground dark:text-gray-100 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
                           onClick={() => setIsProfileOpen(false)}
                         >
-                          Profile Settings
+                          Profile
                         </Link>
+                        
+                        {isAdmin && (
+                          <Link
+                            href="/admin"
+                            className="block px-4 py-2 text-sm text-foreground dark:text-gray-100 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
+                            onClick={() => setIsProfileOpen(false)}
+                          >
+                            Admin Dashboard
+                          </Link>
+                        )}
+                        
                         <button
                           onClick={handleLogout}
-                          className="block w-full px-4 py-2 text-sm text-left text-destructive hover:bg-accent transition-colors"
+                          className="block w-full text-left px-4 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
                         >
                           Sign out
                         </button>
@@ -297,7 +355,7 @@ export default function Header() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="md:hidden border-t border-border bg-background"
+            className="md:hidden border-t border-border dark:border-gray-700 bg-background dark:bg-gray-800"
           >
             <nav className="container py-4">
               <ul className="space-y-4">
@@ -311,7 +369,7 @@ export default function Header() {
                   >
                     <Link
                       href={link.href}
-                      className="block text-lg font-medium hover:text-primary transition-colors"
+                      className="block text-lg font-medium text-foreground dark:text-gray-100 hover:text-primary transition-colors"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {link.label}
@@ -326,10 +384,10 @@ export default function Header() {
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.2, delay: 0.2 }}
                 >
-                  <div className="pt-4 mt-4 border-t border-border">
+                  <div className="pt-4 mt-4 border-t border-border dark:border-gray-700">
                     <button
                       onClick={() => setIsSearchOpen(!isSearchOpen)}
-                      className="flex items-center w-full px-4 py-2 text-lg font-medium hover:text-primary transition-colors"
+                      className="flex items-center w-full px-4 py-2 text-lg font-medium text-foreground dark:text-gray-100 hover:text-primary transition-colors"
                     >
                       <svg
                         className="h-5 w-5 mr-2"
@@ -355,13 +413,13 @@ export default function Header() {
                               <input
                                 type="text"
                                 placeholder="Search documentation..."
-                                className="w-full h-10 pl-10 pr-4 rounded-md border border-input bg-background text-sm transition-colors
-                                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
-                                  placeholder:text-muted-foreground"
+                                className="w-full h-10 pl-10 pr-4 rounded-md border border-input dark:border-gray-600 bg-background dark:bg-gray-700 text-foreground dark:text-gray-100 text-sm transition-colors
+                                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:focus-visible:ring-gray-500
+                                  placeholder:text-muted-foreground dark:placeholder:text-gray-400"
                                 autoFocus
                               />
                               <svg
-                                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-gray-400"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -376,13 +434,62 @@ export default function Header() {
                   </div>
                 </motion.li>
 
+                {/* Theme Toggle Button */}
+                <motion.li
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2, delay: 0.25 }}
+                >
+                  <button
+                    onClick={toggleTheme}
+                    className="flex items-center w-full px-4 py-2 text-lg font-medium text-foreground dark:text-gray-100 hover:text-primary transition-colors"
+                  >
+                    {theme === 'dark' ? (
+                      <>
+                        <svg
+                          className="h-5 w-5 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                          />
+                        </svg>
+                        Light Mode
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="h-5 w-5 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                          />
+                        </svg>
+                        Dark Mode
+                      </>
+                    )}
+                  </button>
+                </motion.li>
+
                 {/* User Account Section */}
                 <motion.li
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.2, delay: 0.3 }}
-                  className="pt-4 mt-4 border-t border-border"
+                  className="pt-4 mt-4 border-t border-border dark:border-gray-700"
                 >
                   {isLoading ? (
                     <div className="flex justify-center">
@@ -414,25 +521,26 @@ export default function Header() {
                       </div>
                       <div className="space-y-1">
                         <Link
-                          href="/dashboard"
-                          className="block px-4 py-2 text-lg font-medium hover:text-primary transition-colors"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          Dashboard
-                        </Link>
-                        <Link
                           href="/profile"
-                          className="block px-4 py-2 text-lg font-medium hover:text-primary transition-colors"
+                          className="flex items-center px-4 py-2 text-sm text-foreground dark:text-gray-100 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
-                          Profile Settings
+                          Profile
                         </Link>
+                        
+                        {isAdmin && (
+                          <Link
+                            href="/admin"
+                            className="flex items-center px-4 py-2 text-sm text-foreground dark:text-gray-100 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            Admin Dashboard
+                          </Link>
+                        )}
+                        
                         <button
-                          onClick={() => {
-                            handleLogout();
-                            setIsMobileMenuOpen(false);
-                          }}
-                          className="block w-full text-left px-4 py-2 text-lg font-medium text-destructive hover:text-destructive/80 transition-colors"
+                          onClick={handleLogout}
+                          className="flex w-full items-center px-4 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
                         >
                           Sign out
                         </button>
@@ -441,7 +549,7 @@ export default function Header() {
                   ) : (
                     <Link
                       href="/login"
-                      className="block px-4 py-2 text-lg font-medium hover:text-primary transition-colors"
+                      className="block px-4 py-2 text-lg font-medium text-foreground dark:text-gray-100 hover:text-primary transition-colors"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Sign in

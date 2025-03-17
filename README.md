@@ -34,3 +34,25 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Admin Dashboard
+
+The application includes an admin dashboard that displays real-time statistics from your Appwrite project. To set up the admin dashboard:
+
+1. Create an API key in your Appwrite console with the following permissions:
+   - Users: Read
+   - Storage: Read
+   - Databases: Read
+
+2. Create a `.env.local` file in the root of your project with the following content:
+   ```
+   APPWRITE_API_KEY=your-api-key-here
+   ```
+
+3. Restart your development server.
+
+4. To grant admin access to a user, set their user preferences in Appwrite:
+   - Key: `admin`
+   - Value: `true`
+
+Once configured, users with admin privileges will see an "Admin Dashboard" link in their profile dropdown menu.

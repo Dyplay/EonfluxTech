@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { getGumroadConnection, disconnectGumroad } from '@/lib/gumroad';
 import { getGumroadAuthUrl } from '@/lib/gumroad';
 import { Models } from 'appwrite';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
 
 interface GumroadConnectionData {
   $id: string;
@@ -113,10 +115,24 @@ export default function GumroadConnection({ userId }: { userId: string }) {
 
   if (!connection) {
     return (
-      <div className="p-4 space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Connect your Gumroad account to manage your products and sales.
-        </p>
+      <div className="p-6 space-y-4 bg-card rounded-lg border border-border">
+        <div className="flex items-center space-x-3">
+          <div className="relative h-8 w-8">
+            <Image
+              src="/gumroad-logo.svg"
+              alt="Gumroad Logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+          <div>
+            <h3 className="font-medium">Gumroad Integration</h3>
+            <p className="text-sm text-muted-foreground">
+              Connect your Gumroad account to manage your products and sales.
+            </p>
+          </div>
+        </div>
         <button
           onClick={handleConnect}
           className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors 
@@ -132,11 +148,22 @@ export default function GumroadConnection({ userId }: { userId: string }) {
   }
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex flex-col space-y-1">
-        <p className="text-sm font-medium">Connected Account</p>
-        <p className="text-sm text-muted-foreground">{connection.gumroad_name}</p>
-        <p className="text-sm text-muted-foreground">{connection.gumroad_email}</p>
+    <div className="p-6 space-y-4 bg-card rounded-lg border border-border">
+      <div className="flex items-center space-x-3">
+        <div className="relative h-8 w-8">
+          <Image
+            src="/gumroad-logo.svg"
+            alt="Gumroad Logo"
+            fill
+            className="object-contain"
+            priority
+          />
+        </div>
+        <div>
+          <h3 className="font-medium">Connected Gumroad Account</h3>
+          <p className="text-sm text-muted-foreground">{connection.gumroad_name}</p>
+          <p className="text-sm text-muted-foreground">{connection.gumroad_email}</p>
+        </div>
       </div>
       <button
         onClick={handleDisconnect}

@@ -54,6 +54,15 @@ export async function getCurrentUser() {
   }
 }
 
+export async function isUserAdmin() {
+  try {
+    const user = await account.get();
+    return user?.prefs?.admin === true || user?.prefs?.admin === 'true';
+  } catch (error) {
+    return false;
+  }
+}
+
 export async function updateProfile(name: string, avatar?: string) {
   try {
     const user = await account.updatePrefs({ name, avatar });
