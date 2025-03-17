@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useTheme } from '@/app/components/ThemeProvider';
+import { useTranslation } from './TranslationProvider';
 
 export default function Footer() {
   const [mounted, setMounted] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { t, locale } = useTranslation();
 
   useEffect(() => {
     setMounted(true);
@@ -37,11 +39,11 @@ export default function Footer() {
               />
             </div>
             <p className="text-sm text-secondary">
-              Where universal and simple software is built. Creating open-source technologies that empower developers and users alike.
+              {t('common.description')}
             </p>
           </div>
           <div>
-            <h3 className="font-bold mb-4">Products</h3>
+            <h3 className="font-bold mb-4">{t('common.products')}</h3>
             <ul className="space-y-2 text-sm">
               <li><Link href="/chat" className="text-secondary hover:text-foreground">EonfluxTech Chat</Link></li>
               <li><Link href="/tunneled" className="text-secondary hover:text-foreground">Tunneled</Link></li>
@@ -49,23 +51,23 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h3 className="font-bold mb-4">Company</h3>
+            <h3 className="font-bold mb-4">{t('common.company')}</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/about" className="text-secondary hover:text-foreground">About Us</Link></li>
+              <li><Link href="/about" className="text-secondary hover:text-foreground">{t('common.about')}</Link></li>
               <li><Link href="/blog" className="text-secondary hover:text-foreground">Blog</Link></li>
-              <li><Link href="/contact" className="text-secondary hover:text-foreground">Contact</Link></li>
+              <li><Link href="/contact" className="text-secondary hover:text-foreground">{t('common.contact')}</Link></li>
             </ul>
           </div>
           <div>
             <h3 className="font-bold mb-4">Legal</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/privacy" className="text-secondary hover:text-foreground">Privacy</Link></li>
-              <li><Link href="/terms" className="text-secondary hover:text-foreground">Terms</Link></li>
+              <li><Link href="/privacy" className="text-secondary hover:text-foreground">{t('footer.privacy_policy')}</Link></li>
+              <li><Link href="/terms" className="text-secondary hover:text-foreground">{t('footer.terms_of_service')}</Link></li>
             </ul>
           </div>
         </div>
         <div className="mt-12 pt-8 border-t border-border">
-          <p className="text-sm text-secondary">© EonfluxTech 2024. All rights reserved.</p>
+          <p className="text-sm text-secondary">{t('footer.copyright')}</p>
         </div>
       </div>
     </footer>

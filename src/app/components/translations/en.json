@@ -1,0 +1,42 @@
+{
+  "common": {
+    "description": "Creating universal and simple software that empowers developers and users alike.",
+    "documentation": "Documentation",
+    "components": "Components",
+    "products": "Products",
+    "examples": "Examples",
+    "translator_test": "Translator Test",
+    "toggle_menu": "Toggle menu",
+    "switch_to_light": "Switch to light mode",
+    "switch_to_dark": "Switch to dark mode",
+    "search": "Search...",
+    "close_search": "Close search",
+    "open_search": "Open search",
+    "toggle_profile": "Toggle profile menu",
+    "user": "User",
+    "profile": "Profile",
+    "admin_dashboard": "Admin Dashboard",
+    "logout": "Logout",
+    "login": "Login",
+    "company": "Company",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "home": {
+    "title": "Welcome to Eonflux Technologies",
+    "subtitle": "Building the future of technology",
+    "get_started": "Get Started",
+    "learn_more": "Learn More"
+  },
+  "about": {
+    "title": "About Us",
+    "subtitle": "Our mission and vision",
+    "mission": "Our mission is to create universal and simple software that empowers developers and users alike.",
+    "vision": "We envision a world where technology is accessible to everyone, regardless of technical expertise."
+  },
+  "footer": {
+    "privacy_policy": "Privacy Policy",
+    "terms_of_service": "Terms of Service",
+    "copyright": "© 2023 Eonflux Technologies. All rights reserved."
+  }
+} 

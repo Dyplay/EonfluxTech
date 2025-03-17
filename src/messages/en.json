@@ -1,0 +1,51 @@
+{
+  "common": {
+    "home": "Home",
+    "about": "About",
+    "products": "Products",
+    "services": "Services",
+    "contact": "Contact",
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+    "search": "Search",
+    "settings": "Settings",
+    "profile": "Profile",
+    "dashboard": "Dashboard",
+    "admin": "Admin",
+    "welcome": "Welcome to EonfluxTech",
+    "tagline": "Building the Future",
+    "description": "Creating universal and simple software that empowers developers and users alike.",
+    "documentation": "Documentation",
+    "components": "Components",
+    "examples": "Examples",
+    "translator_test": "Translator Test",
+    "company": "Company"
+  },
+  "home": {
+    "title": "EonfluxTech - Building the Future",
+    "hero_title": "Empowering Innovation",
+    "hero_subtitle": "We build software solutions that transform ideas into reality",
+    "cta_button": "Get Started",
+    "learn_more": "Learn More",
+    "featured_products": "Featured Products",
+    "latest_news": "Latest News",
+    "testimonials": "What Our Clients Say"
+  },
+  "about": {
+    "title": "About Us",
+    "subtitle": "Our Story",
+    "mission": "Our Mission",
+    "mission_text": "To create innovative software solutions that empower businesses and individuals.",
+    "vision": "Our Vision",
+    "vision_text": "A world where technology enhances human potential and creates positive impact.",
+    "team": "Our Team",
+    "join_us": "Join Our Team"
+  },
+  "footer": {
+    "copyright": "© 2023 EonfluxTech. All rights reserved.",
+    "privacy_policy": "Privacy Policy",
+    "terms_of_service": "Terms of Service",
+    "contact_us": "Contact Us"
+  }
+} 

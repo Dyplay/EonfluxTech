@@ -1,0 +1,42 @@
+{
+  "common": {
+    "description": "Univerzális és egyszerű szoftvereket készítünk, amelyek egyaránt erősítik a fejlesztőket és a felhasználókat.",
+    "documentation": "Dokumentáció",
+    "components": "Komponensek",
+    "products": "Termékek",
+    "examples": "Példák",
+    "translator_test": "Fordító teszt",
+    "toggle_menu": "Menü kapcsolása",
+    "switch_to_light": "Váltás világos módra",
+    "switch_to_dark": "Váltás sötét módra",
+    "search": "Keresés...",
+    "close_search": "Keresés bezárása",
+    "open_search": "Keresés megnyitása",
+    "toggle_profile": "Profil menü kapcsolása",
+    "user": "Felhasználó",
+    "profile": "Profil",
+    "admin_dashboard": "Admin vezérlőpult",
+    "logout": "Kijelentkezés",
+    "login": "Bejelentkezés",
+    "company": "Cég",
+    "about": "Rólunk",
+    "contact": "Kapcsolat"
+  },
+  "home": {
+    "title": "Üdvözöljük az Eonflux Technologies oldalán",
+    "subtitle": "A technológia jövőjének építése",
+    "get_started": "Kezdés",
+    "learn_more": "Tudjon meg többet"
+  },
+  "about": {
+    "title": "Rólunk",
+    "subtitle": "Küldetésünk és jövőképünk",
+    "mission": "Küldetésünk, hogy univerzális és egyszerű szoftvereket készítsünk, amelyek egyaránt erősítik a fejlesztőket és a felhasználókat.",
+    "vision": "Olyan világot képzelünk el, ahol a technológia mindenki számára elérhető, függetlenül a technikai szakértelemtől."
+  },
+  "footer": {
+    "privacy_policy": "Adatvédelmi irányelvek",
+    "terms_of_service": "Szolgáltatási feltételek",
+    "copyright": "© 2023 Eonflux Technologies. Minden jog fenntartva."
+  }
+} 

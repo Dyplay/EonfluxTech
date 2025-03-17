@@ -1,0 +1,42 @@
+{
+  "common": {
+    "description": "Wir entwickeln universelle und einfache Software, die Entwickler und Benutzer gleichermaßen stärkt.",
+    "documentation": "Dokumentation",
+    "components": "Komponenten",
+    "products": "Produkte",
+    "examples": "Beispiele",
+    "translator_test": "Übersetzer-Test",
+    "toggle_menu": "Menü umschalten",
+    "switch_to_light": "Zum hellen Modus wechseln",
+    "switch_to_dark": "Zum dunklen Modus wechseln",
+    "search": "Suchen...",
+    "close_search": "Suche schließen",
+    "open_search": "Suche öffnen",
+    "toggle_profile": "Profilmenü umschalten",
+    "user": "Benutzer",
+    "profile": "Profil",
+    "admin_dashboard": "Admin-Dashboard",
+    "logout": "Abmelden",
+    "login": "Anmelden",
+    "company": "Unternehmen",
+    "about": "Über uns",
+    "contact": "Kontakt"
+  },
+  "home": {
+    "title": "Willkommen bei Eonflux Technologies",
+    "subtitle": "Wir gestalten die Zukunft der Technologie",
+    "get_started": "Loslegen",
+    "learn_more": "Mehr erfahren"
+  },
+  "about": {
+    "title": "Über uns",
+    "subtitle": "Unsere Mission und Vision",
+    "mission": "Unsere Mission ist es, universelle und einfache Software zu entwickeln, die Entwickler und Benutzer gleichermaßen stärkt.",
+    "vision": "Wir stellen uns eine Welt vor, in der Technologie für jeden zugänglich ist, unabhängig von technischem Fachwissen."
+  },
+  "footer": {
+    "privacy_policy": "Datenschutzrichtlinie",
+    "terms_of_service": "Nutzungsbedingungen",
+    "copyright": "© 2023 Eonflux Technologies. Alle Rechte vorbehalten."
+  }
+} 

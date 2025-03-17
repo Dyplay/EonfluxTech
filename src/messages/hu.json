@@ -1,0 +1,51 @@
+{
+  "common": {
+    "home": "Főoldal",
+    "about": "Rólunk",
+    "products": "Termékek",
+    "services": "Szolgáltatások",
+    "contact": "Kapcsolat",
+    "login": "Bejelentkezés",
+    "signup": "Regisztráció",
+    "logout": "Kijelentkezés",
+    "search": "Keresés",
+    "settings": "Beállítások",
+    "profile": "Profil",
+    "dashboard": "Irányítópult",
+    "admin": "Adminisztráció",
+    "welcome": "Üdvözöljük az EonfluxTech oldalán",
+    "tagline": "Építjük a jövőt",
+    "description": "Univerzális és egyszerű szoftvereket készítünk, amelyek egyaránt erősítik a fejlesztőket és a felhasználókat.",
+    "documentation": "Dokumentáció",
+    "components": "Komponensek",
+    "examples": "Példák",
+    "translator_test": "Fordító teszt",
+    "company": "Cég"
+  },
+  "home": {
+    "title": "EonfluxTech - Építjük a jövőt",
+    "hero_title": "Innováció támogatása",
+    "hero_subtitle": "Olyan szoftvermegoldásokat építünk, amelyek az ötleteket valósággá alakítják",
+    "cta_button": "Kezdés",
+    "learn_more": "Tudjon meg többet",
+    "featured_products": "Kiemelt termékek",
+    "latest_news": "Legfrissebb hírek",
+    "testimonials": "Mit mondanak ügyfeleink"
+  },
+  "about": {
+    "title": "Rólunk",
+    "subtitle": "Történetünk",
+    "mission": "Küldetésünk",
+    "mission_text": "Innovatív szoftvermegoldások létrehozása, amelyek erősítik a vállalkozásokat és az egyéneket.",
+    "vision": "Jövőképünk",
+    "vision_text": "Egy olyan világ, ahol a technológia növeli az emberi potenciált és pozitív hatást gyakorol.",
+    "team": "Csapatunk",
+    "join_us": "Csatlakozzon csapatunkhoz"
+  },
+  "footer": {
+    "copyright": "© 2023 EonfluxTech. Minden jog fenntartva.",
+    "privacy_policy": "Adatvédelmi irányelvek",
+    "terms_of_service": "Szolgáltatási feltételek",
+    "contact_us": "Kapcsolat"
+  }
+} 

@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/app/components/ThemeProvider';
 import { account } from '@/lib/appwrite';
 import { Models } from 'appwrite';
+import { useTranslation } from './TranslationProvider';
 
 export default function Header() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -19,6 +20,7 @@ export default function Header() {
   const [isAdmin, setIsAdmin] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
+  const { t, locale } = useTranslation();
 
   useEffect(() => {
     setMounted(true);
@@ -65,11 +67,11 @@ export default function Header() {
   const logoSrc = theme === 'dark' ? '/logo.png' : '/logo_whitemode.png';
 
   const navigationLinks = [
-    { href: '/docs', label: 'Documentation' },
-    { href: '/components', label: 'Components' },
-    { href: '/products', label: 'Products' },
-    { href: '/examples', label: 'Examples' },
-    { href: '/translator-test', label: 'Translator Test' },
+    { href: '/docs', label: t('common.documentation') },
+    { href: '/components', label: t('common.components') },
+    { href: '/products', label: t('common.products') },
+    { href: '/examples', label: t('common.examples') },
+    { href: '/translator-test', label: t('common.translator_test') },
     { href: 'https://github.com/EonfluxTech-com', label: 'GitHub' }
   ];
 
@@ -109,7 +111,7 @@ export default function Header() {
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="md:hidden ml-auto mr-4 p-2 rounded-md hover:bg-accent transition-colors"
-          aria-label="Toggle menu"
+          aria-label={t('common.toggle_menu')}
         >
           <motion.div
             className="w-6 h-5 flex flex-col justify-between"
@@ -147,7 +149,7 @@ export default function Header() {
           <button
             onClick={toggleTheme}
             className="p-2 rounded-md hover:bg-accent transition-colors"
-            aria-label={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={theme === 'dark' ? t('common.switch_to_light') : t('common.switch_to_dark')}
           >
             <AnimatePresence mode="wait">
               {theme === 'dark' ? (
@@ -205,7 +207,7 @@ export default function Header() {
                 >
                   <input
                     type="text"
-                    placeholder="Search..."
+                    placeholder={t('common.search')}
                     className="w-full h-9 rounded-md border border-input px-3 py-1
                       text-sm shadow-sm transition-colors
                       focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
@@ -218,7 +220,7 @@ export default function Header() {
             <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               className="ml-2 p-2 rounded-md hover:bg-accent transition-colors"
-              aria-label={isSearchOpen ? "Close search" : "Open search"}
+              aria-label={isSearchOpen ? t('common.close_search') : t('common.open_search')}
             >
               <AnimatePresence mode="wait">
                 {isSearchOpen ? (
@@ -252,99 +254,72 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Profile Dropdown or Sign In Button - Hidden on Mobile */}
-          <div className="hidden md:block">
-            {isLoading ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
-            ) : user ? (
-              <div className="relative">
-                <button
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center space-x-2 rounded-md border border-input bg-background px-4 py-2 hover:bg-accent transition-colors"
-                >
-                  <div className="relative h-6 w-6 overflow-hidden rounded-full">
-                    {user.prefs?.avatar ? (
-                      <Image
-                        src={user.prefs.avatar}
-                        alt="Profile"
-                        fill
-                        className="object-cover"
-                        sizes="24px"
-                        priority
-                      />
-                    ) : (
-                      <div className="h-full w-full bg-primary/10 flex items-center justify-center text-primary font-medium">
-                        {user.name?.charAt(0) || user.email?.charAt(0)}
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-sm font-medium">{user.name || user.email}</span>
-                  <motion.svg
-                    animate={{ rotate: isProfileOpen ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+          {/* User Profile */}
+          {!isLoading && (
+            <div className="relative">
+              {user ? (
+                <>
+                  <button
+                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className="flex items-center space-x-2 p-1 rounded-md hover:bg-accent transition-colors"
+                    aria-label={t('common.toggle_profile')}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </motion.svg>
-                </button>
-
-                {/* Dropdown Menu */}
-                <AnimatePresence>
-                  {isProfileOpen && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-card dark:bg-gray-800 border border-border dark:border-gray-700 overflow-hidden z-50"
-                    >
-                      <div className="py-1">
-                        <Link
-                          href="/profile"
-                          className="block px-4 py-2 text-sm text-foreground dark:text-gray-100 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
-                          onClick={() => setIsProfileOpen(false)}
-                        >
-                          Profile
-                        </Link>
-                        
-                        {isAdmin && (
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                      {user.name?.charAt(0) || user.email?.charAt(0) || '?'}
+                    </div>
+                  </button>
+                  
+                  <AnimatePresence>
+                    {isProfileOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute right-0 mt-2 w-64 rounded-md bg-background border shadow-lg z-50"
+                      >
+                        <div className="p-4 border-b">
+                          <p className="font-medium">{user.name || t('common.user')}</p>
+                          <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                        </div>
+                        <div className="p-2">
                           <Link
-                            href="/admin"
-                            className="block px-4 py-2 text-sm text-foreground dark:text-gray-100 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
+                            href="/profile"
+                            className="flex items-center w-full p-2 text-sm rounded-md hover:bg-accent transition-colors"
                             onClick={() => setIsProfileOpen(false)}
                           >
-                            Admin
+                            {t('common.profile')}
                           </Link>
-                        )}
-                        
-                        <button
-                          onClick={handleLogout}
-                          className="block w-full text-left px-4 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
-                        >
-                          Sign Out
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ) : (
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
-              >
-                Sign In
-              </Link>
-            )}
-          </div>
+                          {isAdmin && (
+                            <Link
+                              href="/admin"
+                              className="flex items-center w-full p-2 text-sm rounded-md hover:bg-accent transition-colors"
+                              onClick={() => setIsProfileOpen(false)}
+                            >
+                              {t('common.admin_dashboard')}
+                            </Link>
+                          )}
+                          <button
+                            onClick={handleLogout}
+                            className="flex items-center w-full p-2 text-sm rounded-md hover:bg-accent transition-colors text-left"
+                          >
+                            {t('common.logout')}
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  className="flex items-center space-x-1 px-3 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  {t('common.login')}
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -355,210 +330,49 @@ export default function Header() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="md:hidden border-t border-border dark:border-gray-700 bg-background dark:bg-gray-800"
+            transition={{ duration: 0.2 }}
+            className="md:hidden border-t"
           >
-            <nav className="container py-4">
-              <ul className="space-y-4">
+            <div className="container py-4 space-y-4">
+              <nav className="flex flex-col space-y-4">
                 {navigationLinks.map((link) => (
-                  <motion.li
+                  <Link
                     key={link.href}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
+                    href={link.href}
+                    className="px-2 py-1 rounded-md hover:bg-accent transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <Link
-                      href={link.href}
-                      className="block text-lg font-medium text-foreground dark:text-gray-100 hover:text-primary transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {link.label}
-                    </Link>
-                  </motion.li>
+                    {link.label}
+                  </Link>
                 ))}
-
-                {/* Search Button */}
-                <motion.li
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2, delay: 0.2 }}
-                >
-                  <div className="pt-4 mt-4 border-t border-border dark:border-gray-700">
-                    <button
-                      onClick={() => setIsSearchOpen(!isSearchOpen)}
-                      className="flex items-center w-full px-4 py-2 text-lg font-medium text-foreground dark:text-gray-100 hover:text-primary transition-colors"
-                    >
-                      <svg
-                        className="h-5 w-5 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                      Search
-                    </button>
-                    <AnimatePresence>
-                      {isSearchOpen && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="px-4 pt-2">
-                            <div className="relative">
-                              <input
-                                type="text"
-                                placeholder="Search..."
-                                className="w-full h-10 pl-10 pr-4 rounded-md border border-input dark:border-gray-600 bg-background dark:bg-gray-700 text-foreground dark:text-gray-100 text-sm transition-colors
-                                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:focus-visible:ring-gray-500
-                                  placeholder:text-muted-foreground dark:placeholder:text-gray-400"
-                                autoFocus
-                              />
-                              <svg
-                                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-gray-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                              </svg>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </motion.li>
-
-                {/* Theme Toggle Button */}
-                <motion.li
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2, delay: 0.25 }}
-                >
+              </nav>
+              
+              <div className="pt-4 border-t">
+                <div className="flex items-center">
+                  <input
+                    type="text"
+                    placeholder={t('common.search')}
+                    className="flex-1 h-9 rounded-md border border-input px-3 py-1
+                      text-sm shadow-sm transition-colors
+                      focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
+                      placeholder:text-muted-foreground"
+                  />
                   <button
-                    onClick={toggleTheme}
-                    className="flex items-center w-full px-4 py-2 text-lg font-medium text-foreground dark:text-gray-100 hover:text-primary transition-colors"
+                    className="ml-2 p-2 rounded-md hover:bg-accent transition-colors"
+                    aria-label={t('common.search')}
                   >
-                    {theme === 'dark' ? (
-                      <>
-                        <svg
-                          className="h-5 w-5 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                          />
-                        </svg>
-                        Light Mode
-                      </>
-                    ) : (
-                      <>
-                        <svg
-                          className="h-5 w-5 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                          />
-                        </svg>
-                        Dark Mode
-                      </>
-                    )}
-                  </button>
-                </motion.li>
-
-                {/* User Account Section */}
-                <motion.li
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2, delay: 0.3 }}
-                  className="pt-4 mt-4 border-t border-border dark:border-gray-700"
-                >
-                  {isLoading ? (
-                    <div className="flex justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-                    </div>
-                  ) : user ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center px-4 py-2">
-                        <div className="relative h-10 w-10 overflow-hidden rounded-full mr-3">
-                          {user.prefs?.avatar ? (
-                            <Image
-                              src={user.prefs.avatar}
-                              alt="Profile"
-                              fill
-                              className="object-cover"
-                              sizes="40px"
-                              priority
-                            />
-                          ) : (
-                            <div className="h-full w-full bg-primary/10 flex items-center justify-center text-primary text-lg font-medium">
-                              {user.name?.charAt(0) || user.email?.charAt(0)}
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-medium">{user.name || 'User'}</div>
-                          <div className="text-sm text-muted-foreground">{user.email}</div>
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <Link
-                          href="/profile"
-                          className="flex items-center px-4 py-2 text-sm text-foreground dark:text-gray-100 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          Profile
-                        </Link>
-                        
-                        {isAdmin && (
-                          <Link
-                            href="/admin"
-                            className="flex items-center px-4 py-2 text-sm text-foreground dark:text-gray-100 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            Admin
-                          </Link>
-                        )}
-                        
-                        <button
-                          onClick={handleLogout}
-                          className="flex w-full items-center px-4 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-accent dark:hover:bg-gray-700 transition-colors"
-                        >
-                          Sign Out
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <Link
-                      href="/login"
-                      className="block px-4 py-2 text-lg font-medium text-foreground dark:text-gray-100 hover:text-primary transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      Sign In
-                    </Link>
-                  )}
-                </motion.li>
-              </ul>
-            </nav>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

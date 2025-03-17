@@ -1,0 +1,51 @@
+{
+  "common": {
+    "home": "Startseite",
+    "about": "Über uns",
+    "products": "Produkte",
+    "services": "Dienstleistungen",
+    "contact": "Kontakt",
+    "login": "Anmelden",
+    "signup": "Registrieren",
+    "logout": "Abmelden",
+    "search": "Suchen",
+    "settings": "Einstellungen",
+    "profile": "Profil",
+    "dashboard": "Dashboard",
+    "admin": "Administration",
+    "welcome": "Willkommen bei EonfluxTech",
+    "tagline": "Wir gestalten die Zukunft",
+    "description": "Wir entwickeln universelle und einfache Software, die Entwickler und Benutzer gleichermaßen stärkt.",
+    "documentation": "Dokumentation",
+    "components": "Komponenten",
+    "examples": "Beispiele",
+    "translator_test": "Übersetzer-Test",
+    "company": "Unternehmen"
+  },
+  "home": {
+    "title": "EonfluxTech - Wir gestalten die Zukunft",
+    "hero_title": "Innovation fördern",
+    "hero_subtitle": "Wir entwickeln Softwarelösungen, die Ideen in die Realität umsetzen",
+    "cta_button": "Loslegen",
+    "learn_more": "Mehr erfahren",
+    "featured_products": "Ausgewählte Produkte",
+    "latest_news": "Neueste Nachrichten",
+    "testimonials": "Was unsere Kunden sagen"
+  },
+  "about": {
+    "title": "Über uns",
+    "subtitle": "Unsere Geschichte",
+    "mission": "Unsere Mission",
+    "mission_text": "Innovative Softwarelösungen zu entwickeln, die Unternehmen und Einzelpersonen stärken.",
+    "vision": "Unsere Vision",
+    "vision_text": "Eine Welt, in der Technologie das menschliche Potenzial erweitert und positive Auswirkungen hat.",
+    "team": "Unser Team",
+    "join_us": "Unserem Team beitreten"
+  },
+  "footer": {
+    "copyright": "© 2023 EonfluxTech. Alle Rechte vorbehalten.",
+    "privacy_policy": "Datenschutzrichtlinie",
+    "terms_of_service": "Nutzungsbedingungen",
+    "contact_us": "Kontaktieren Sie uns"
+  }
+} 
