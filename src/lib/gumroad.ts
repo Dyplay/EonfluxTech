@@ -166,18 +166,14 @@ interface GumroadProductsResponse {
   products: GumroadProduct[];
 }
 
-export const getGumroadProducts = async (userId: string): Promise<GumroadProduct[]> => {
+export const getGumroadProducts = async (): Promise<GumroadProduct[]> => {
   try {
-    // Get the user's Gumroad connection
-    const connection = await getGumroadConnection(userId);
-    if (!connection) {
-      throw new Error('No Gumroad connection found');
-    }
+    const API_KEY = 'ikbK-8N7sWm_77qW30fB8rFiaStsMaQ_czmyayErxHs';
 
-    // Fetch products from Gumroad
+    // Fetch products directly using the API key
     const response = await fetch('https://api.gumroad.com/v2/products', {
       headers: {
-        'Authorization': `Bearer ${connection.access_token}`,
+        'Authorization': `Bearer ${API_KEY}`,
       },
     });
 
@@ -188,28 +184,22 @@ export const getGumroadProducts = async (userId: string): Promise<GumroadProduct
 
     const data: GumroadProductsResponse = await response.json();
     
-    // Filter out products with "Membership" in the title
-    return data.products.filter(product => 
-      product.published && !product.name.toLowerCase().includes('membership')
-    );
+    // Filter out products that are not published
+    return data.products.filter(product => product.published);
   } catch (error) {
     console.error('Error fetching Gumroad products:', error);
     throw error;
   }
 };
 
-export const getGumroadProduct = async (userId: string, productId: string): Promise<GumroadProduct> => {
+export const getGumroadProduct = async (productId: string): Promise<GumroadProduct> => {
   try {
-    // Get the user's Gumroad connection
-    const connection = await getGumroadConnection(userId);
-    if (!connection) {
-      throw new Error('No Gumroad connection found');
-    }
+    const API_KEY = 'ikbK-8N7sWm_77qW30fB8rFiaStsMaQ_czmyayErxHs';
 
-    // Fetch specific product from Gumroad
+    // Fetch specific product using the API key
     const response = await fetch(`https://api.gumroad.com/v2/products/${productId}`, {
       headers: {
-        'Authorization': `Bearer ${connection.access_token}`,
+        'Authorization': `Bearer ${API_KEY}`,
       },
     });
 

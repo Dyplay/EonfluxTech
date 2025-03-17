@@ -4,8 +4,8 @@ import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { account } from '@/lib/appwrite';
 import { getGumroadProduct } from '@/lib/gumroad';
+import DOMPurify from 'isomorphic-dompurify';
 
 interface ProductPageProps {
   params: {
@@ -23,11 +23,11 @@ interface Product {
   preview_url: string | null;
   url: string | null;
   short_url: string;
-  content: string[];
   custom_fields: {
     name: string;
     required: boolean;
   }[];
+  custom_permalink?: string;
 }
 
 function CheckoutModal({ onClose, checkoutUrl }: { onClose: () => void; checkoutUrl: string }) {
@@ -60,160 +60,34 @@ function CheckoutModal({ onClose, checkoutUrl }: { onClose: () => void; checkout
     // Then change its location to the checkout URL
     checkoutWindow.location.href = checkoutUrl;
 
-    // Function to check if URL indicates success
-    const isSuccessUrl = (url: string) => {
-      const successPatterns = [
-        'gumroad.com/d/',
-        '/thank_you',
-        '/success',
-        '/download',
-        'gumroad.com/receipts/'
-      ];
-      return successPatterns.some(pattern => url.includes(pattern));
-    };
-
-    // Check popup URL and status periodically
-    const checkPopup = setInterval(() => {
-      // Check if window is closed
-      if (checkoutWindow.closed) {
-        clearInterval(checkPopup);
-        if (status === 'processing') {
-          onClose();
-        }
-        return;
-      }
-
-      try {
-        // Try to access the URL (this will throw if cross-origin)
-        const currentUrl = checkoutWindow.location.href;
-        
-        // Skip if still on about:blank
-        if (currentUrl === 'about:blank') {
-          return;
-        }
-
-        // Check for success URL patterns
-        if (isSuccessUrl(currentUrl)) {
-          clearInterval(checkPopup);
-          setStatus('completed');
-          setTimeout(() => {
-            checkoutWindow.close();
-          }, 500);
-        }
-      } catch (error) {
-        // Ignore cross-origin errors
+    // Function to check if window is closed
+    const checkWindow = setInterval(() => {
+      if (popupRef.current?.closed) {
+        clearInterval(checkWindow);
+        onClose();
       }
     }, 500);
 
-    // Handle window closing
-    const handleBeforeUnload = () => {
-      if (popupRef.current && !popupRef.current.closed) {
-        popupRef.current.close();
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    // Cleanup
     return () => {
-      clearInterval(checkPopup);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      if (popupRef.current && !popupRef.current.closed) {
-        popupRef.current.close();
-      }
+      clearInterval(checkWindow);
+      popupRef.current?.close();
     };
-  }, [checkoutUrl, onClose, status]);
-
-  // Auto-close after showing completion for 2 seconds
-  useEffect(() => {
-    if (status === 'completed') {
-      const timer = setTimeout(() => {
-        onClose();
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [status, onClose]);
+  }, [checkoutUrl, onClose]);
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 bg-background/80 backdrop-blur-sm"
+      onClick={onClose}
     >
-      {/* Blurred background */}
-      <div 
-        className="absolute inset-0 bg-background/80 backdrop-blur-sm"
-        onClick={() => {
-          if (status === 'processing') {
-            onClose();
-          }
-        }}
-      />
-      
-      {/* Modal content */}
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="relative bg-card p-6 rounded-lg shadow-lg max-w-md w-full mx-4"
-      >
-        <div className="text-center">
-          {status === 'processing' ? (
-            <>
-              <div className="mb-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              </div>
-              <h3 className="text-lg font-medium mb-2">
-                Checkout in Progress
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                Complete your purchase in the popup window. This window will close automatically when you're done.
-              </p>
-              <button
-                onClick={() => {
-                  if (popupRef.current && !popupRef.current.closed) {
-                    popupRef.current.close();
-                  }
-                  onClose();
-                }}
-                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors"
-              >
-                Cancel Checkout
-              </button>
-            </>
-          ) : (
-            <>
-              <div className="mb-4">
-                <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <h3 className="text-lg font-medium mb-2">
-                Checkout Completed!
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                Thank you for your purchase! You'll receive an email with your product details shortly.
-              </p>
-              <div className="text-sm text-muted-foreground">
-                This window will close automatically...
-              </div>
-            </>
-          )}
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+        <div className="flex items-center space-x-3">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Processing checkout...</p>
         </div>
-      </motion.div>
+      </div>
     </motion.div>
   );
 }
@@ -232,9 +106,27 @@ export default function ProductPage({ params }: ProductPageProps) {
         setIsLoading(true);
         setError(null);
 
-        const currentUser = await account.get();
-        const productData = await getGumroadProduct(currentUser.$id, params.productId);
-        setProduct(productData);
+        const gumroadProduct = await getGumroadProduct(params.productId);
+        
+        // Transform GumroadProduct into our Product type
+        const transformedProduct: Product = {
+          id: gumroadProduct.id,
+          name: gumroadProduct.name,
+          description: gumroadProduct.description,
+          price: gumroadProduct.price,
+          formatted_price: gumroadProduct.formatted_price,
+          thumbnail_url: gumroadProduct.thumbnail_url || null,
+          preview_url: gumroadProduct.preview_url || null,
+          url: gumroadProduct.url || null,
+          short_url: `https://gumroad.com/l/${gumroadProduct.custom_permalink || gumroadProduct.id}`,
+          custom_fields: gumroadProduct.custom_fields?.map(field => ({
+            name: field.name,
+            required: field.required || false
+          })) || [],
+          custom_permalink: gumroadProduct.custom_permalink
+        };
+
+        setProduct(transformedProduct);
       } catch (err: any) {
         console.error('Error loading product:', err);
         setError(err.message || 'Failed to load product');
@@ -287,8 +179,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   }
 
   const handleCheckout = () => {
-    const productPermalink = product!.short_url.split('/l/')[1];
-    const url = `https://gumroad.com/checkout?product=${productPermalink}&quantity=1&referrer=${encodeURIComponent(window.location.href)}`;
+    const url = `https://gumroad.com/checkout?product=${product.id}&quantity=1&referrer=https%3A%2F%2Fgumroad.com%2F`;
     setCheckoutUrl(url);
     setIsCheckoutOpen(true);
   };
@@ -296,16 +187,16 @@ export default function ProductPage({ params }: ProductPageProps) {
   return (
     <>
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="container max-w-6xl py-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
       >
         <button
           onClick={() => router.push('/shop')}
-          className="mb-8 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+          className="mb-8 text-sm font-medium hover:text-primary transition-colors inline-flex items-center gap-2"
         >
           <svg
-            className="h-5 w-5 mr-2"
+            className="w-4 h-4"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -320,76 +211,68 @@ export default function ProductPage({ params }: ProductPageProps) {
           Back to Shop
         </button>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="aspect-video relative rounded-lg overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-card border border-border">
             <Image
               src={product.thumbnail_url || product.preview_url || '/placeholder-product.png'}
               alt={product.name}
               fill
               className="object-cover"
               priority
+              sizes="(max-width: 1024px) 100vw, 50vw"
             />
           </div>
 
-          <div>
-            <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
-            <p className="text-2xl font-medium mb-6">{product.formatted_price}</p>
-            
-            <div className="prose dark:prose-invert mb-8">
-              <h2 className="text-xl font-semibold mb-2">Description</h2>
-              <div 
-                className="text-muted-foreground"
-                dangerouslySetInnerHTML={{ __html: product.description }}
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <h1 className="text-4xl font-bold">{product.name}</h1>
+              <p className="text-3xl font-bold text-primary">{product.formatted_price}</p>
+            </div>
+
+            <div className="prose prose-lg dark:prose-invert">
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(product.description)
+                }}
               />
             </div>
 
-            {product.content && product.content.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">What's Included</h2>
-                <ul className="space-y-2">
-                  {product.content.map((item, index) => (
-                    <li key={index} className="flex items-start">
-                      <svg
-                        className="h-5 w-5 mr-2 text-primary flex-shrink-0 mt-0.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
             {product.custom_fields && product.custom_fields.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Additional Information</h2>
-                <ul className="space-y-2">
-                  {product.custom_fields.map((field, index) => (
-                    <li key={index} className="flex items-center">
-                      <span className="font-medium mr-2">{field.name}:</span>
-                      <span className="text-muted-foreground">
-                        {field.required ? 'Required' : 'Optional'}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+              <div className="space-y-4">
+                <h2 className="text-2xl font-semibold">Additional Information</h2>
+                <div className="bg-card border border-border rounded-lg p-6">
+                  <ul className="space-y-4">
+                    {product.custom_fields.map((field, index) => (
+                      <li key={index} className="flex items-center justify-between">
+                        <span className="font-medium">{field.name}</span>
+                        <span className="text-sm px-3 py-1 bg-primary/10 text-primary rounded-full">
+                          {field.required ? 'Required' : 'Optional'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             )}
 
             <button
               onClick={handleCheckout}
-              className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
+              className="w-full px-8 py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold text-lg flex items-center justify-center gap-2"
             >
-              Buy on Gumroad
+              <span>Buy Now</span>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                />
+              </svg>
             </button>
           </div>
         </div>

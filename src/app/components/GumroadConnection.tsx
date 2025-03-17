@@ -6,18 +6,26 @@ import { getGumroadAuthUrl } from '@/lib/gumroad';
 import { Models } from 'appwrite';
 
 interface GumroadConnectionData {
-  gumroad_name: string;
+  $id: string;
+  user_id: string;
+  gumroad_user_id: string;
+  access_token: string;
   gumroad_email: string;
-  $id?: string;
-  $createdAt?: string;
-  $updatedAt?: string;
-  user_id?: string;
+  gumroad_name: string;
+  gumroad_url?: string | null;
+  created_at?: string;
+  last_updated?: string;
 }
 
 function isGumroadConnectionData(data: unknown): data is GumroadConnectionData {
   if (!data || typeof data !== 'object') return false;
   const d = data as any;
-  return typeof d.gumroad_name === 'string' && typeof d.gumroad_email === 'string';
+  return (
+    typeof d.gumroad_user_id === 'string' &&
+    typeof d.access_token === 'string' &&
+    typeof d.gumroad_email === 'string' &&
+    typeof d.gumroad_name === 'string'
+  );
 }
 
 export default function GumroadConnection({ userId }: { userId: string }) {
@@ -35,10 +43,16 @@ export default function GumroadConnection({ userId }: { userId: string }) {
       setError(null);
       const data = await getGumroadConnection(userId);
       
+      if (!data) {
+        setConnection(null);
+        return;
+      }
+
       // Type guard to ensure data has the required properties
       if (isGumroadConnectionData(data)) {
         setConnection(data);
       } else {
+        console.error('Invalid connection data:', data);
         throw new Error('Invalid Gumroad connection data received');
       }
     } catch (err: any) {
