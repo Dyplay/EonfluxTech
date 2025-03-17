@@ -179,7 +179,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   }
 
   const handleCheckout = () => {
-    const url = `https://gumroad.com/checkout?product=${params.productId}&quantity=1&referrer=https%3A%2F%2Fgumroad.com%2F`;
+    const url = `https://gumroad.com/checkout?product=${product.id}&quantity=1&referrer=https%3A%2F%2Fgumroad.com%2F`;
     setCheckoutUrl(url);
     setIsCheckoutOpen(true);
   };
