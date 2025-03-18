@@ -42,10 +42,44 @@
     "team": "Our Team",
     "join_us": "Join Our Team"
   },
+  "privacy": {
+    "title": "Privacy Policy",
+    "last_updated": "Last Updated",
+    "contact_email": "privacy@eonfluxtech.com"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "last_updated": "Last Updated",
+    "contact_email": "legal@eonfluxtech.com",
+    "sections": {
+      "agreement": "Agreement to Terms",
+      "license": "Use License",
+      "opensource": "Open Source Software",
+      "accounts": "User Accounts",
+      "availability": "Service Availability",
+      "ip": "Intellectual Property",
+      "content": "User Content",
+      "liability": "Limitation of Liability",
+      "law": "Governing Law",
+      "changes": "Changes to Terms",
+      "contact": "Contact Information"
+    }
+  },
   "footer": {
     "copyright": "© 2023 EonfluxTech. All rights reserved.",
     "privacy_policy": "Privacy Policy",
     "terms_of_service": "Terms of Service",
     "contact_us": "Contact Us"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "name": "Name",
+    "email": "Email",
+    "subject": "Subject",
+    "message": "Message",
+    "send": "Send Message",
+    "sending": "Sending...",
+    "success": "Message sent successfully!",
+    "error": "Failed to send message. Please try again."
   }
 } 

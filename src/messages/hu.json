@@ -42,10 +42,44 @@
     "team": "Csapatunk",
     "join_us": "Csatlakozzon csapatunkhoz"
   },
+  "privacy": {
+    "title": "Adatvédelmi Szabályzat",
+    "last_updated": "Utoljára frissítve",
+    "contact_email": "privacy@eonfluxtech.com"
+  },
+  "terms": {
+    "title": "Felhasználási Feltételek",
+    "last_updated": "Utoljára frissítve",
+    "contact_email": "legal@eonfluxtech.com",
+    "sections": {
+      "agreement": "Feltételek elfogadása",
+      "license": "Felhasználási licenc",
+      "opensource": "Nyílt forráskódú szoftver",
+      "accounts": "Felhasználói fiókok",
+      "availability": "Szolgáltatás elérhetősége",
+      "ip": "Szellemi tulajdon",
+      "content": "Felhasználói tartalom",
+      "liability": "Felelősség korlátozása",
+      "law": "Irányadó jog",
+      "changes": "Feltételek módosítása",
+      "contact": "Kapcsolatfelvétel"
+    }
+  },
   "footer": {
     "copyright": "© 2023 EonfluxTech. Minden jog fenntartva.",
     "privacy_policy": "Adatvédelmi irányelvek",
-    "terms_of_service": "Szolgáltatási feltételek",
+    "terms_of_service": "Felhasználási feltételek",
     "contact_us": "Kapcsolat"
+  },
+  "contact": {
+    "title": "Kapcsolat",
+    "name": "Név",
+    "email": "E-mail",
+    "subject": "Tárgy",
+    "message": "Üzenet",
+    "send": "Üzenet küldése",
+    "sending": "Küldés...",
+    "success": "Az üzenet sikeresen elküldve!",
+    "error": "Az üzenet küldése sikertelen. Kérjük, próbálja újra."
   }
 } 

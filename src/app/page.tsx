@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { FiGithub, FiExternalLink, FiCode, FiPackage, FiServer, FiDownload } from 'react-icons/fi';
-import { fetchOrganizationRepos } from '@/lib/github';
+import { getGithubRepos } from '@/lib/github';
 import Script from 'next/script';
 
 const EarthModel = dynamic(() => import('./components/EarthModel'), {
@@ -54,7 +54,7 @@ export default async function Home() {
   
   try {
     console.log('Attempting to fetch GitHub repositories...');
-    const allRepos = await fetchOrganizationRepos('EonfluxTech-com');
+    const allRepos = await getGithubRepos();
     
     console.log('GitHub API response received:', {
       reposCount: allRepos?.length || 0,
