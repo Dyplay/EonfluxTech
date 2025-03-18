@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     siteName: 'Eonflux Technologies',
     images: [
       {
-        url: 'Creating universal and simple software that empowers developers and users alike. (1).png',
+        url: '/Creating universal and simple software that empowers developers and users alike. (1).png',
         width: 1200,
         height: 630,
         alt: 'Eonflux Technologies'
@@ -31,22 +31,8 @@ export const metadata: Metadata = {
     type: 'website',
   },
   icons: {
-    icon: [
-      {
-        url: '/icon.png',
-        sizes: '32x32',
-      },
-      {
-        url: '/icon.png',
-        type: 'image/png',
-        sizes: '192x192',
-      }
-    ],
-    apple: {
-      url: '/apple-icon.png',
-      type: 'image/png',
-      sizes: '180x180',
-    },
+    icon: '/icon.png',
+    apple: '/icon.png',
   },
 };
 
