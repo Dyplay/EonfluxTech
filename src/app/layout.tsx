@@ -14,6 +14,40 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Eonflux Technologies",
   description: "Innovative solutions for a connected world",
+  openGraph: {
+    title: 'Eonflux Technologies',
+    description: 'Innovative solutions for a connected world',
+    url: 'https://eonfluxtech.com',
+    siteName: 'Eonflux Technologies',
+    images: [
+      {
+        url: 'Creating universal and simple software that empowers developers and users alike. (1).png',
+        width: 1200,
+        height: 630,
+        alt: 'Eonflux Technologies'
+      }
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  icons: {
+    icon: [
+      {
+        url: '/icon.png',
+        sizes: '32x32',
+      },
+      {
+        url: '/icon.png',
+        type: 'image/png',
+        sizes: '192x192',
+      }
+    ],
+    apple: {
+      url: '/apple-icon.png',
+      type: 'image/png',
+      sizes: '180x180',
+    },
+  },
 };
 
 export default function RootLayout({
