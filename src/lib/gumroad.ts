@@ -4,7 +4,7 @@ import { ID } from 'appwrite';
 
 const GUMROAD_CLIENT_ID = 'xuf2jXskKSwegJFQyL77V7OaV55XtCJNVZiEHe9NW-s';
 const GUMROAD_CLIENT_SECRET = '-U9CoPYgAspHQiPU5JyuB87vnm9yHz0PVaY-s-H_qoA';
-const REDIRECT_URI = 'https://www.eonfluxtech.com//auth/gumroad/callback';
+const REDIRECT_URI = 'https://www.eonfluxtech.com/auth/gumroad/callback';
 const DATABASE_ID = '67d3fa9b00025dff9050';
 const COLLECTION_ID = 'gumroad_connections';
 
