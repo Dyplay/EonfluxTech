@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getGithubRepos } from '@/lib/github';
+import { getGithubRepos, GitHubRepo } from '@/lib/github';
 import { FiChevronDown, FiGithub, FiDownload, FiCode, FiStar, FiGitBranch } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 
@@ -9,7 +9,7 @@ type SortOption = 'recently_updated' | 'stars' | 'name';
 type FilterOption = 'all' | 'source' | 'fork';
 
 export default function ProductsPage() {
-  const [repos, setRepos] = useState([]);
+  const [repos, setRepos] = useState<GitHubRepo[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
@@ -43,7 +43,7 @@ export default function ProductsPage() {
       // Apply search filter
       const matchesSearch = repo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (repo.description?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-        (repo.topics || []).some(topic => topic.toLowerCase().includes(searchQuery.toLowerCase()));
+        (repo.topics || []).some((topic: string) => topic.toLowerCase().includes(searchQuery.toLowerCase()));
 
       // Apply type filter
       const matchesFilter = currentFilter === 'all' ? true :
