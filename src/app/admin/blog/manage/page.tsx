@@ -1,0 +1,326 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { databases, storage } from '@/lib/appwrite';
+import { Query } from 'appwrite';
+import { useAuth } from '@/hooks/useAuth';
+import Link from 'next/link';
+import { toast } from 'sonner';
+import { 
+  FiPlus, FiEdit2, FiTrash2, FiEye, FiArrowLeft, 
+  FiCheck, FiX, FiFilter, FiSearch
+} from 'react-icons/fi';
+import BlogAdminNav from '@/app/components/admin/BlogAdminNav';
+import DOMPurify from 'isomorphic-dompurify';
+
+export default function ManageBlogPostsPage() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const [posts, setPosts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState('all'); // all, published, draft
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Only redirect if auth is not loading and user is not logged in
+    if (!authLoading && !user) {
+      console.log('Not authenticated, redirecting to login');
+      router.push('/login');
+      return;
+    }
+    
+    // Only fetch posts if user is authenticated and auth loading is complete
+    if (user && !authLoading) {
+      console.log('User authenticated, fetching posts');
+      fetchPosts();
+    }
+  }, [user, authLoading, router, filter]);
+  
+  const fetchPosts = async () => {
+    try {
+      setIsLoading(true);
+      
+      const queries = [
+        Query.equal('authorId', user?.$id || ''),
+      ];
+      
+      if (filter === 'published') {
+        queries.push(Query.equal('published', true));
+      } else if (filter === 'draft') {
+        queries.push(Query.equal('published', false));
+      }
+      
+      const response = await databases.listDocuments(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'blogs',
+        queries
+      );
+      
+      setPosts(response.documents);
+    } catch (error) {
+      console.error('Error fetching blog posts:', error);
+      toast.error('Failed to load blog posts');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // If still loading authentication, show loading state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
+          <p className="text-secondary">Verifying authentication...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // If not authenticated and not loading, the useEffect will handle redirect
+  if (!user && !authLoading) {
+    return null;
+  }
+  
+  const deletePost = async (postId: string) => {
+    if (!confirm('Are you sure you want to delete this blog post? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      setIsDeleting(postId);
+      
+      // Find the post to get the image URL
+      const post = posts.find(p => p.$id === postId);
+      
+      if (post && post.bannerImage) {
+        try {
+          // Extract file ID from the URL - this depends on how your URLs are structured
+          const url = new URL(post.bannerImage);
+          const pathParts = url.pathname.split('/');
+          const fileId = pathParts[pathParts.length - 1];
+          
+          // Delete the associated image
+          await storage.deleteFile(
+            process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!,
+            fileId
+          );
+        } catch (imageError) {
+          console.error('Error deleting image:', imageError);
+          // Continue with post deletion even if image deletion fails
+        }
+      }
+      
+      // Delete the blog post
+      await databases.deleteDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'blogs',
+        postId
+      );
+      
+      setPosts(posts.filter(post => post.$id !== postId));
+      toast.success('Blog post deleted successfully');
+    } catch (error) {
+      console.error('Error deleting blog post:', error);
+      toast.error('Failed to delete blog post');
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+  
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+  
+  const filteredPosts = posts.filter(post => {
+    return post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           (post.excerpt && post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())) ||
+           (post.tags && post.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase())));
+  });
+
+  return (
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => router.push('/admin')}
+              className="p-2 rounded-full hover:bg-accent transition-colors"
+            >
+              <FiArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-foreground text-3xl font-bold">
+              Manage Blog Posts
+            </h1>
+          </div>
+          
+          <Link 
+            href="/admin/blog"
+            className="btn btn-primary flex items-center gap-2"
+          >
+            <FiPlus className="w-4 h-4" />
+            Create New Post
+          </Link>
+        </div>
+        
+        <BlogAdminNav />
+        
+        <div className="bg-accent/50 rounded-lg border border-border p-6 mb-8">
+          <div className="flex flex-col md:flex-row gap-4 justify-between">
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiSearch className="text-secondary" />
+              </div>
+              <input
+                type="text"
+                className="pl-10 p-2 w-full rounded-md border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="Search by title, excerpt or tags..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-1">
+                <FiFilter className="text-secondary" />
+                <span className="text-sm font-medium">Filter:</span>
+              </div>
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="p-2 rounded-md border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+              >
+                <option value="all">All Posts</option>
+                <option value="published">Published</option>
+                <option value="draft">Drafts</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
+            <p className="text-secondary">Loading blog posts...</p>
+          </div>
+        ) : filteredPosts.length === 0 ? (
+          <div className="text-center py-12 bg-accent/30 rounded-lg border border-border">
+            <div className="bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <FiEdit2 className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-foreground text-xl font-semibold mb-2">No blog posts found</h3>
+            <p className="text-secondary max-w-md mx-auto mb-6">
+              {searchTerm ? 
+                "No posts match your search criteria. Try different keywords or clear the search." : 
+                filter !== 'all' ? 
+                  `You don't have any ${filter === 'published' ? 'published posts' : 'drafts'} yet.` : 
+                  "You haven't created any blog posts yet. Click the button below to create your first post."}
+            </p>
+            <Link 
+              href="/admin/blog"
+              className="btn btn-primary inline-flex items-center gap-2"
+            >
+              <FiPlus className="w-4 h-4" />
+              Create New Post
+            </Link>
+          </div>
+        ) : (
+          <div className="grid gap-6">
+            {filteredPosts.map((post) => (
+              <div
+                key={post.$id}
+                className="bg-background border border-border rounded-lg overflow-hidden flex flex-col md:flex-row"
+              >
+                {post.bannerImage && (
+                  <div className="md:w-64 h-48 md:h-auto">
+                    <img
+                      src={post.bannerImage}
+                      alt={post.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="p-6 flex-1 flex flex-col">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h2 className="text-xl font-bold hover:text-primary transition-colors">
+                        {post.title}
+                      </h2>
+                      <div className="flex items-center gap-3 text-sm text-secondary mt-1">
+                        <span>Created: {formatDate(post.createdAt)}</span>
+                        <span>•</span>
+                        <span className={`flex items-center gap-1 ${post.published ? 'text-green-500' : 'text-yellow-500'}`}>
+                          {post.published ? (
+                            <>
+                              <FiCheck className="w-3 h-3" />
+                              Published
+                            </>
+                          ) : (
+                            <>
+                              <FiX className="w-3 h-3" />
+                              Draft
+                            </>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Link 
+                        href={`/admin/blog/edit/${post.$id}?slug=${post.slug}`}
+                        className="p-2 bg-accent rounded-md hover:bg-accent/80 transition-colors"
+                        title="Edit Post"
+                      >
+                        <FiEdit2 className="w-4 h-4" />
+                      </Link>
+                      <Link 
+                        href={`/blog/${post.slug}`}
+                        target="_blank"
+                        className="p-2 bg-accent rounded-md hover:bg-accent/80 transition-colors"
+                        title="View Post"
+                      >
+                        <FiEye className="w-4 h-4" />
+                      </Link>
+                      <button
+                        onClick={() => deletePost(post.$id)}
+                        disabled={isDeleting === post.$id}
+                        className="p-2 bg-red-500/10 text-red-500 rounded-md hover:bg-red-500/20 transition-colors"
+                        title="Delete Post"
+                      >
+                        {isDeleting === post.$id ? (
+                          <div className="w-4 h-4 border-2 border-red-500/50 border-t-red-500 rounded-full animate-spin" />
+                        ) : (
+                          <FiTrash2 className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <p className="text-secondary mb-4 line-clamp-2">
+                    {post.excerpt || post.content.substring(0, 150).replace(/<[^>]*>/g, '') + '...'}
+                  </p>
+                  
+                  {post.tags && post.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-auto">
+                      {post.tags.map((tag: string) => (
+                        <span key={tag} className="px-2 py-1 bg-primary/10 rounded-full text-primary text-xs">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+} 

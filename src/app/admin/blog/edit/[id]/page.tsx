@@ -13,27 +13,70 @@ import BlogAdminNav from '@/app/components/admin/BlogAdminNav';
 
 const Editor = dynamic(() => import('@/components/Editor'), { ssr: false });
 
-export default function AdminBlogPage() {
+export default function EditBlogPostPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [bannerImage, setBannerImage] = useState<File | null>(null);
+  const [currentBannerUrl, setCurrentBannerUrl] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [excerpt, setExcerpt] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [isPublished, setIsPublished] = useState(true);
+  const [post, setPost] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
       console.log('Not authenticated, redirecting to login');
       router.push('/login');
+      return;
     }
-  }, [user, authLoading, router]);
+    
+    if (user && !authLoading) {
+      console.log('User authenticated, fetching post data');
+      fetchPost();
+    }
+  }, [user, authLoading, params.id, router]);
+
+  const fetchPost = async () => {
+    try {
+      setIsLoading(true);
+      
+      const fetchedPost = await databases.getDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'blogs',
+        params.id
+      );
+      
+      // Make sure the user is the author of the post
+      if (fetchedPost.authorId !== user?.$id) {
+        toast.error('You are not authorized to edit this post');
+        router.push('/admin/blog/manage');
+        return;
+      }
+      
+      setPost(fetchedPost);
+      setTitle(fetchedPost.title || '');
+      setContent(fetchedPost.content || '');
+      setExcerpt(fetchedPost.excerpt || '');
+      setTags(fetchedPost.tags || []);
+      setIsPublished(fetchedPost.published ?? true);
+      setCurrentBannerUrl(fetchedPost.bannerImage || null);
+      setPreviewUrl(fetchedPost.bannerImage || null);
+    } catch (error) {
+      console.error('Error fetching blog post:', error);
+      toast.error('Failed to load blog post');
+      router.push('/admin/blog/manage');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (authLoading) {
     return (
@@ -98,6 +141,7 @@ export default function AdminBlogPage() {
   const removeImage = () => {
     setBannerImage(null);
     setPreviewUrl(null);
+    setCurrentBannerUrl(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -127,57 +171,76 @@ export default function AdminBlogPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !content || !bannerImage) {
+    if (!title || !content || (!bannerImage && !currentBannerUrl)) {
       toast.error('Please fill in all required fields');
       return;
     }
 
     try {
       setIsSubmitting(true);
-      toast.loading('Creating blog post...');
+      toast.loading('Updating blog post...');
 
-      // Upload banner image
-      const fileUpload = await storage.createFile(
-        process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!,
-        ID.unique(),
-        bannerImage
-      );
+      let imageUrl = currentBannerUrl;
 
-      const imageUrl = storage.getFileView(
-        process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!,
-        fileUpload.$id
-      );
+      // Upload new banner image if changed
+      if (bannerImage) {
+        // Delete old image if it exists
+        if (currentBannerUrl) {
+          try {
+            // Extract file ID from the URL
+            const url = new URL(currentBannerUrl);
+            const pathParts = url.pathname.split('/');
+            const fileId = pathParts[pathParts.length - 1];
+            
+            await storage.deleteFile(
+              process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!,
+              fileId
+            );
+          } catch (error) {
+            console.error('Error deleting old image:', error);
+            // Continue even if old image deletion fails
+          }
+        }
 
-      // Create blog post
-      const slug = createSlug(title);
-      const post = await databases.createDocument(
+        // Upload new image
+        const fileUpload = await storage.createFile(
+          process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!,
+          ID.unique(),
+          bannerImage
+        );
+
+        imageUrl = storage.getFileView(
+          process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!,
+          fileUpload.$id
+        ).toString();
+      }
+
+      // Update blog post
+      const updatedPost = await databases.updateDocument(
         process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
         'blogs',
-        ID.unique(),
+        params.id,
         {
           title,
-          slug,
+          slug: createSlug(title),
           content,
           excerpt: excerpt || content.substring(0, 150).replace(/<[^>]*>/g, '') + '...',
-          bannerImage: imageUrl.toString(),
-          authorId: user?.$id || 'anonymous',
-          authorName: user?.name || 'Anonymous',
+          bannerImage: imageUrl,
           tags: tags,
           published: isPublished,
-          createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }
       );
 
-      toast.success('Blog post created successfully!');
+      toast.success('Blog post updated successfully!');
       if (isPublished) {
-        router.push(`/blog/${slug}`);
+        router.push(`/blog/${updatedPost.slug}`);
       } else {
         router.push('/admin/blog/manage');
       }
     } catch (error) {
-      console.error('Error creating blog post:', error);
-      toast.error('Failed to create blog post. Please try again.');
+      console.error('Error updating blog post:', error);
+      toast.error('Failed to update blog post. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -217,19 +280,30 @@ export default function AdminBlogPage() {
     </div>
   );
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-secondary">Loading blog post...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => router.back()}
+              onClick={() => router.push('/admin/blog/manage')}
               className="p-2 rounded-full hover:bg-accent transition-colors"
             >
               <FiArrowLeft className="w-5 h-5" />
             </button>
             <h1 className="text-foreground text-3xl font-bold">
-              {isPreviewMode ? 'Preview Blog Post' : 'Create Blog Post'}
+              {isPreviewMode ? 'Preview Blog Post' : 'Edit Blog Post'}
             </h1>
           </div>
           
@@ -255,7 +329,7 @@ export default function AdminBlogPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={isSubmitting || !title || !content || !bannerImage}
+              disabled={isSubmitting || !title || !content || (!bannerImage && !currentBannerUrl)}
               className="btn btn-primary flex items-center gap-2"
             >
               {isSubmitting ? (
@@ -280,12 +354,12 @@ export default function AdminBlogPage() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  Publishing...
+                  Saving...
                 </>
               ) : (
                 <>
                   <FiSave className="w-4 h-4" />
-                  {isPublished ? 'Publish' : 'Save Draft'}
+                  {isPublished ? 'Update & Publish' : 'Save as Draft'}
                 </>
               )}
             </button>
@@ -431,7 +505,7 @@ export default function AdminBlogPage() {
                 />
                 <div className="relative w-11 h-6 bg-secondary/30 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                 <span className="ms-3 text-sm font-medium text-foreground">
-                  {isPublished ? 'Publish immediately' : 'Save as draft'}
+                  {isPublished ? 'Published' : 'Draft'}
                 </span>
               </label>
             </div>
@@ -440,4 +514,4 @@ export default function AdminBlogPage() {
       </div>
     </div>
   );
-}
+} 
