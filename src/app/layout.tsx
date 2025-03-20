@@ -13,6 +13,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://eonfluxtech.com'),
   title: "Eonflux Technologies",
   description: "Innovative solutions for a connected world",
   openGraph: {

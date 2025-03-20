@@ -8,6 +8,8 @@ import { FiEdit2 } from 'react-icons/fi';
 import { LikeButton } from './components/LikeButton';
 import { SaveButton } from './components/SaveButton';
 
+export const dynamic = 'force-dynamic';
+
 // Function to get user data including preferences (avatar)
 async function getUserById(userId: string) {
   try {
