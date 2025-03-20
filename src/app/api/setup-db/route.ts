@@ -237,25 +237,27 @@ export async function POST(request: Request) {
           databaseId,
           collection.$id,
           'slug_index',
-          IndexType.KEY,
+          IndexType.Unique,
           ['slug'],
-          true // is unique
+          [] // orders parameter
         );
 
         await databases.createIndex(
           databaseId,
           collection.$id,
           'author_index',
-          IndexType.KEY,
-          ['authorId']
+          IndexType.Key,
+          ['authorId'],
+          [] // orders parameter
         );
 
         await databases.createIndex(
           databaseId,
           collection.$id,
           'published_index',
-          IndexType.KEY,
-          ['published']
+          IndexType.Key,
+          ['published'],
+          [] // orders parameter
         );
 
         console.log('Blogs collection created with required attributes and indexes');
