@@ -177,7 +177,6 @@ export default async function BlogPage() {
                         <LikeButton
                           postId={post.$id}
                           initialLikes={post.likes || 0}
-                          initialLikedByUser={false}
                         />
                         <SaveButton
                           postId={post.$id}
