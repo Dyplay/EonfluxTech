@@ -24,7 +24,7 @@ export function useAuth() {
 
   const login = async (email: string, password: string) => {
     try {
-      const session = await account.createEmailSession(email, password);
+      const session = await account.createEmailPasswordSession(email, password);
       const user = await account.get();
       setUser(user);
       return { success: true };
