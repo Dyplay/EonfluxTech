@@ -428,13 +428,7 @@ export default function AdminBlogPage() {
                     >
                       <FiX className="w-3 h-3" />
                     </button>
-                  </div>
-                ))}
-              </div>
-              <input
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
+                    /blog/${post.$id}/${post.slug}e={(e) => setTagInput(e.target.value)}
                 onKeyDown={addTag}
                 className="w-full px-4 py-3 bg-background border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition duration-150 ease-in-out"
                 placeholder="Add tags (press Enter or comma to add)"
