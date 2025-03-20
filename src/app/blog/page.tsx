@@ -148,9 +148,12 @@ export default async function BlogPage() {
                     <Image
                       src={post.bannerImage}
                       alt={post.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      width={2100}
+                      height={900}
+                      className="object-cover w-full h-full"
+                      quality={100}
+                      priority
+                      unoptimized
                     />
                     
                     {!post.published && (
