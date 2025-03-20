@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Client, Databases, ID, Permission, Role } from 'node-appwrite';
+import { Client, Databases, ID, Permission, Role, IndexType } from 'node-appwrite';
 
 // Setup database API route - only for authorized users
 export async function POST(request: Request) {
@@ -237,7 +237,7 @@ export async function POST(request: Request) {
           databaseId,
           collection.$id,
           'slug_index',
-          'key',
+          IndexType.KEY,
           ['slug'],
           true // is unique
         );
@@ -246,7 +246,7 @@ export async function POST(request: Request) {
           databaseId,
           collection.$id,
           'author_index',
-          'key',
+          IndexType.KEY,
           ['authorId']
         );
 
@@ -254,7 +254,7 @@ export async function POST(request: Request) {
           databaseId,
           collection.$id,
           'published_index',
-          'key',
+          IndexType.KEY,
           ['published']
         );
 
