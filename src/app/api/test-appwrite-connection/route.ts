@@ -41,8 +41,8 @@ export async function GET() {
     // Make an actual API call to verify the connection
     const teams = new Teams(client);
     
-    // Get total team count (this is a lightweight call that just verifies our connection and permissions)
-    const teamsList = await teams.list('1', '0'); // Just get 1 team to minimize data transfer
+    // Get a single team to verify the connection (this is a lightweight call)
+    const team = await teams.get('admin'); // Using the admin team ID which should exist
     
     return NextResponse.json({ 
       success: true, 
@@ -50,7 +50,7 @@ export async function GET() {
       details: {
         endpoint: process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT,
         projectId: process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID?.substring(0, 4) + '...',
-        totalTeams: teamsList.total
+        teamName: team.name
       }
     });
   } catch (error: any) {
