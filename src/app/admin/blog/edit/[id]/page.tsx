@@ -65,7 +65,14 @@ export default function EditBlogPostPage({ params }: { params: { id: string } })
       setTitle(fetchedPost.title || '');
       setContent(fetchedPost.content || '');
       setExcerpt(fetchedPost.excerpt || '');
-      setTags(fetchedPost.tags || []);
+      
+      // Parse tags from comma-separated string to array
+      if (fetchedPost.tags) {
+        setTags(fetchedPost.tags.split(',').filter((tag: string) => tag.trim()).map((tag: string) => tag.trim()));
+      } else {
+        setTags([]);
+      }
+      
       setIsPublished(fetchedPost.published ?? true);
       setCurrentBannerUrl(fetchedPost.bannerImage || null);
       setPreviewUrl(fetchedPost.bannerImage || null);
@@ -181,6 +188,7 @@ export default function EditBlogPostPage({ params }: { params: { id: string } })
       toast.loading('Updating blog post...');
 
       let imageUrl = currentBannerUrl;
+      let imageChanged = false;
 
       // Upload new banner image if changed
       if (bannerImage) {
@@ -213,6 +221,45 @@ export default function EditBlogPostPage({ params }: { params: { id: string } })
           process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!,
           fileUpload.$id
         ).toString();
+        imageChanged = true;
+      }
+
+      // Define the interface for document data
+      interface BlogDocumentData {
+        title: string;
+        slug: string;
+        content: string;
+        excerpt: string;
+        bannerImage: string;
+        published: boolean;
+        updatedAt: string;
+        tags?: string;
+        authorAvatar?: string;
+      }
+
+      // Create update data object
+      const updateData: BlogDocumentData = {
+        title,
+        slug: createSlug(title),
+        content,
+        excerpt: excerpt || content.substring(0, 150).replace(/<[^>]*>/g, '') + '...',
+        published: isPublished,
+        updatedAt: new Date().toISOString(),
+        bannerImage: imageUrl || '',
+      };
+
+      // Add the author's avatar URL if available
+      if (user?.prefs?.avatar) {
+        updateData.authorAvatar = user.prefs.avatar;
+      }
+
+      // Only add tags if there are any, as a comma-separated string
+      if (tags && tags.length > 0) {
+        try {
+          updateData.tags = tags.join(',');
+        } catch (e) {
+          console.warn('Could not add tags:', e);
+        }
       }
 
       // Update blog post
@@ -220,16 +267,7 @@ export default function EditBlogPostPage({ params }: { params: { id: string } })
         process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
         'blogs',
         params.id,
-        {
-          title,
-          slug: createSlug(title),
-          content,
-          excerpt: excerpt || content.substring(0, 150).replace(/<[^>]*>/g, '') + '...',
-          bannerImage: imageUrl,
-          tags: tags,
-          published: isPublished,
-          updatedAt: new Date().toISOString(),
-        }
+        updateData
       );
 
       toast.success('Blog post updated successfully!');

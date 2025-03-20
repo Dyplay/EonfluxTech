@@ -1,19 +1,72 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { databases } from '@/lib/appwrite';
+import { databases, storage } from '@/lib/appwrite';
 import { BlogPost, Author } from '@/lib/types';
 import { Query } from 'appwrite';
+import { cookies } from 'next/headers';
+import { Client, Users } from 'node-appwrite';
+
+// Function to get user data including preferences (avatar)
+async function getUserById(userId: string) {
+  try {
+    // Try to get the user document from users collection first
+    try {
+      const response = await databases.getDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'users',
+        userId
+      );
+      
+      if (response && response.avatarUrl) {
+        return { avatarUrl: response.avatarUrl };
+      }
+    } catch (error) {
+      console.log('No user document found in database, trying server API next');
+    }
+    
+    // If API key is available, try to get user data from server
+    if (process.env.APPWRITE_API_KEY) {
+      const client = new Client()
+        .setEndpoint('https://cloud.appwrite.io/v1')
+        .setProject('67d3f589000488385c35')
+        .setKey(process.env.APPWRITE_API_KEY);
+
+      const users = new Users(client);
+      const userData = await users.get(userId);
+      
+      if (userData && userData.prefs && userData.prefs.avatar) {
+        return { avatarUrl: userData.prefs.avatar };
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    return null;
+  }
+}
 
 async function getBlogPosts(): Promise<BlogPost[]> {
   try {
+    // Check if user is authenticated to determine if we show drafts
+    const cookieStore = cookies();
+    const sessionCookie = cookieStore.get('appwrite_session');
+    const isAuthenticated = !!sessionCookie;
+    
+    const queries = [Query.orderDesc('createdAt')];
+    
+    // Only show published posts to non-authenticated users
+    if (!isAuthenticated) {
+      queries.push(Query.equal('published', true));
+    }
+    
     const response = await databases.listDocuments(
-      process.env.APPWRITE_DATABASE_ID!,
+      process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
       'blogs',
-      [
-        Query.orderDesc('createdAt'),
-      ]
+      queries
     );
-    return response.documents as BlogPost[];
+    // Cast to unknown first, then to BlogPost[] to avoid TypeScript error
+    return response.documents as unknown as BlogPost[];
   } catch (error) {
     console.error('Error fetching blog posts:', error);
     return [];
@@ -23,11 +76,12 @@ async function getBlogPosts(): Promise<BlogPost[]> {
 async function getAuthor(authorId: string): Promise<Author | null> {
   try {
     const response = await databases.getDocument(
-      process.env.APPWRITE_DATABASE_ID!,
+      process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
       'users',
       authorId
     );
-    return response as Author;
+    // Cast to unknown first, then to Author to avoid TypeScript error
+    return response as unknown as Author;
   } catch (error) {
     console.error('Error fetching author:', error);
     return null;
@@ -43,12 +97,35 @@ export default async function BlogPage() {
       
       <div className="grid gap-8">
         {posts.map(async (post) => {
+          // Get author information
           const author = await getAuthor(post.authorId);
+          
+          // Get user preferences with avatar URL
+          const userData = post.authorId ? await getUserById(post.authorId) : null;
+          
+          // Get author profile picture URL
+          let authorImageUrl = null;
+          try {
+            // First check if we got avatar from user preferences
+            if (userData && userData.avatarUrl) {
+              authorImageUrl = userData.avatarUrl;
+            }
+            // Then check if author has avatarUrl in the author document
+            else if (author && author.avatarUrl) {
+              authorImageUrl = author.avatarUrl;
+            }
+            // Finally, check if post has authorAvatar
+            else if (post.authorAvatar) {
+              authorImageUrl = post.authorAvatar;
+            }
+          } catch (error) {
+            console.error('Error accessing author avatar:', error);
+          }
           
           return (
             <Link 
               key={post.$id}
-              href={`/blog/${post.$id}/${post.slug}`}
+              href={`/blog/${post.slug}`}
               className="block group"
             >
               <article className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
@@ -60,6 +137,12 @@ export default async function BlogPage() {
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
+                  
+                  {!post.published && (
+                    <div className="absolute top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      Draft
+                    </div>
+                  )}
                 </div>
                 
                 <div className="p-6">
@@ -69,22 +152,22 @@ export default async function BlogPage() {
                   
                   <div className="flex items-center gap-3 mb-4">
                     <div className="relative h-10 w-10 rounded-full overflow-hidden bg-primary/10">
-                      {author?.avatarUrl ? (
+                      {authorImageUrl ? (
                         <Image
-                          src={author.avatarUrl}
-                          alt={author.name}
+                          src={authorImageUrl}
+                          alt={author?.name || post.authorName || 'Author'}
                           fill
                           className="object-cover"
                         />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center text-primary font-medium">
-                          {author?.name.charAt(0)}
+                          {author?.name?.charAt(0) || post.authorName?.charAt(0) || 'A'}
                         </div>
                       )}
                     </div>
                     
                     <div>
-                      <p className="font-medium">{author?.name}</p>
+                      <p className="font-medium">{author?.name || post.authorName || 'Anonymous'}</p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(post.createdAt).toLocaleDateString('en-US', {
                           year: 'numeric',
@@ -96,7 +179,7 @@ export default async function BlogPage() {
                   </div>
                   
                   <div className="line-clamp-3 text-muted-foreground mb-4">
-                    {post.content.substring(0, 200)}...
+                    {post.excerpt || post.content.substring(0, 200).replace(/<[^>]*>/g, '')}...
                   </div>
                   
                   <span className="text-primary font-medium group-hover:underline">

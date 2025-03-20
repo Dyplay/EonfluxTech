@@ -150,23 +150,56 @@ export default function AdminBlogPage() {
 
       // Create blog post
       const slug = createSlug(title);
+      
+      // Define document data interface with optional tags
+      interface BlogDocumentData {
+        title: string;
+        slug: string;
+        content: string;
+        excerpt: string;
+        bannerImage: string;
+        authorId: string;
+        authorName: string;
+        published: boolean;
+        createdAt: string;
+        updatedAt: string;
+        tags?: string;
+        authorAvatar?: string;
+      }
+      
+      // Create document data object
+      const documentData: BlogDocumentData = {
+        title,
+        slug,
+        content,
+        excerpt: excerpt || content.substring(0, 150).replace(/<[^>]*>/g, '') + '...',
+        bannerImage: imageUrl.toString(),
+        authorId: user?.$id || 'anonymous',
+        authorName: user?.name || 'Anonymous',
+        published: isPublished,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      // Add the author's avatar URL if available
+      if (user?.prefs?.avatar) {
+        documentData.authorAvatar = user.prefs.avatar;
+      }
+      
+      // Only add tags if there are any, as a comma-separated string
+      if (tags && tags.length > 0) {
+        try {
+          documentData.tags = tags.join(',');
+        } catch (e) {
+          console.warn('Could not add tags:', e);
+        }
+      }
+      
       const post = await databases.createDocument(
         process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
         'blogs',
         ID.unique(),
-        {
-          title,
-          slug,
-          content,
-          excerpt: excerpt || content.substring(0, 150).replace(/<[^>]*>/g, '') + '...',
-          bannerImage: imageUrl.toString(),
-          authorId: user?.$id || 'anonymous',
-          authorName: user?.name || 'Anonymous',
-          tags: tags,
-          published: isPublished,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
+        documentData
       );
 
       toast.success('Blog post created successfully!');

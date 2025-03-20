@@ -3,8 +3,13 @@ export interface BlogPost {
   title: string;
   slug: string;
   content: string;
+  excerpt?: string;
   bannerImage: string;
   authorId: string;
+  authorName?: string;
+  authorAvatar?: string;
+  published?: boolean;
+  tags?: string | string[];
   createdAt: string;
   updatedAt: string;
 }

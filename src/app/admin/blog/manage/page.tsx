@@ -140,9 +140,22 @@ export default function ManageBlogPostsPage() {
   };
   
   const filteredPosts = posts.filter(post => {
-    return post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           (post.excerpt && post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())) ||
-           (post.tags && post.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase())));
+    const titleMatch = post.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const excerptMatch = post.excerpt && post.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Check for tag matches based on the format (string or array)
+    let tagMatch = false;
+    if (post.tags) {
+      if (typeof post.tags === 'string') {
+        // If tags is a string (comma-separated)
+        tagMatch = post.tags.toLowerCase().includes(searchTerm.toLowerCase());
+      } else if (Array.isArray(post.tags)) {
+        // If tags is still an array (for backward compatibility)
+        tagMatch = post.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+      }
+    }
+    
+    return titleMatch || excerptMatch || tagMatch;
   });
 
   return (
@@ -280,7 +293,7 @@ export default function ManageBlogPostsPage() {
                         <FiEdit2 className="w-4 h-4" />
                       </Link>
                       <Link 
-                        href={`/blog/${post.slug}`}
+                        href={`/blog/${post.$id}/${post.slug}`}
                         target="_blank"
                         className="p-2 bg-accent rounded-md hover:bg-accent/80 transition-colors"
                         title="View Post"
@@ -308,11 +321,20 @@ export default function ManageBlogPostsPage() {
                   
                   {post.tags && post.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-auto">
-                      {post.tags.map((tag: string) => (
-                        <span key={tag} className="px-2 py-1 bg-primary/10 rounded-full text-primary text-xs">
-                          {tag}
-                        </span>
-                      ))}
+                      {typeof post.tags === 'string' 
+                        ? post.tags.split(',').filter(tag => !!tag.trim()).map((tag) => (
+                            <span key={tag} className="px-2 py-1 bg-primary/10 rounded-full text-primary text-xs">
+                              {tag}
+                            </span>
+                          ))
+                        : Array.isArray(post.tags) 
+                          ? post.tags.map((tag) => (
+                              <span key={tag} className="px-2 py-1 bg-primary/10 rounded-full text-primary text-xs">
+                                {tag}
+                              </span>
+                            ))
+                          : null
+                      }
                     </div>
                   )}
                 </div>
