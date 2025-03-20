@@ -42,7 +42,7 @@ export async function GET() {
     const teams = new Teams(client);
     
     // Get total team count (this is a lightweight call that just verifies our connection and permissions)
-    const teamsList = await teams.list(['1'], ['0']); // Just get 1 team to minimize data transfer
+    const teamsList = await teams.list('1', '0'); // Just get 1 team to minimize data transfer
     
     return NextResponse.json({ 
       success: true, 
