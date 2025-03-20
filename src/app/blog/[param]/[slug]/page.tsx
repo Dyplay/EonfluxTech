@@ -1,15 +1,15 @@
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { databases, storage } from '@/lib/appwrite';
 import { BlogPost, Author } from '@/lib/types';
 import { Metadata } from 'next';
-import { Query } from 'appwrite';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { FiArrowLeft } from 'react-icons/fi';
 
 interface BlogPostPageProps {
   params: {
+    param: string;
     slug: string;
   };
 }
@@ -34,21 +34,17 @@ async function getUserById(userId: string) {
     
     // Then check if this post has authorAvatar
     try {
-      // Find a post with this authorId that might have authorAvatar
-      const response = await databases.listDocuments(
+      const post = await databases.getDocument(
         process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
         'blogs',
-        [Query.equal('authorId', userId)]
+        userId // This is the post.authorId which might also be the post.$id
       );
       
-      if (response.documents.length > 0) {
-        const post = response.documents[0];
-        if (post.authorAvatar) {
-          return { avatarUrl: post.authorAvatar };
-        }
+      if (post && post.authorAvatar) {
+        return { avatarUrl: post.authorAvatar };
       }
     } catch (error) {
-      console.log('No matching posts found or no authorAvatar');
+      console.log('No matching post found or no authorAvatar');
     }
     
     return null;
@@ -58,35 +54,17 @@ async function getUserById(userId: string) {
   }
 }
 
-async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+async function getBlogPost(id: string): Promise<BlogPost | null> {
   try {
-    // Check if there's a session cookie to determine if we should show drafts
-    const cookieStore = cookies();
-    const sessionCookie = cookieStore.get('appwrite_session');
-    const isAuthenticated = !!sessionCookie;
-    
-    // Query to find the post by slug
-    const queries = [Query.equal('slug', slug)];
-    
-    // Only filter by published status for non-authenticated users
-    if (!isAuthenticated) {
-      queries.push(Query.equal('published', true));
-    }
-    
-    const response = await databases.listDocuments(
+    const response = await databases.getDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
       'blogs',
-      queries
+      id
     );
-    
-    if (response.documents.length === 0) {
-      return null;
-    }
-    
     // Cast to unknown first, then to BlogPost to avoid TypeScript error
-    return response.documents[0] as unknown as BlogPost;
+    return response as unknown as BlogPost;
   } catch (error) {
-    console.error('Error fetching blog post by slug:', error);
+    console.error('Error fetching blog post:', error);
     return null;
   }
 }
@@ -107,7 +85,7 @@ async function getAuthor(authorId: string): Promise<Author | null> {
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const post = await getBlogPostBySlug(params.slug);
+  const post = await getBlogPost(params.param);
   
   if (!post) {
     return {
@@ -135,14 +113,27 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const post = await getBlogPostBySlug(params.slug);
+  const post = await getBlogPost(params.param);
   
-  if (!post) {
+  if (!post || post.slug !== params.slug) {
     notFound();
   }
   
+  // Check if post is published or user is authenticated
+  if (!post.published) {
+    // Check if user is authenticated
+    const cookieStore = cookies();
+    const sessionCookie = cookieStore.get('appwrite_session');
+    const isAuthenticated = !!sessionCookie;
+    
+    if (!isAuthenticated) {
+      // Redirect to blog home if not published and not authenticated
+      redirect('/blog');
+    }
+  }
+  
   // Get author information
-  const author = post.authorId ? await getAuthor(post.authorId) : null;
+  const author = await getAuthor(post.authorId);
   
   // Get user preferences with avatar URL
   const userData = post.authorId ? await getUserById(post.authorId) : null;
@@ -165,7 +156,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   } catch (error) {
     console.error('Error accessing author avatar:', error);
   }
-
+  
   // Function to parse tags whether they're string or array
   const parseTags = (tags: unknown) => {
     if (!tags) return [];
