@@ -250,7 +250,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           postSlug={post.slug}
           postBannerImage={post.bannerImage}
           postExcerpt={post.excerpt}
-          initialSaved={false}
         />
         </div>
         {postTags.length > 0 && (
