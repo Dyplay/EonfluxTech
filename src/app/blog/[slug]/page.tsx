@@ -7,7 +7,6 @@ import { Query } from 'appwrite';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { FiArrowLeft } from 'react-icons/fi';
-import { Client, Users } from 'node-appwrite';
 
 interface BlogPostPageProps {
   params: {
@@ -30,22 +29,26 @@ async function getUserById(userId: string) {
         return { avatarUrl: response.avatarUrl };
       }
     } catch (error) {
-      console.log('No user document found in database, trying server API next');
+      console.log('No user document found in database');
     }
     
-    // If API key is available, try to get user data from server
-    if (process.env.APPWRITE_API_KEY) {
-      const client = new Client()
-        .setEndpoint('https://cloud.appwrite.io/v1')
-        .setProject('67d3f589000488385c35')
-        .setKey(process.env.APPWRITE_API_KEY);
-
-      const users = new Users(client);
-      const userData = await users.get(userId);
+    // Then check if this post has authorAvatar
+    try {
+      // Find a post with this authorId that might have authorAvatar
+      const response = await databases.listDocuments(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'blogs',
+        [Query.equal('authorId', userId)]
+      );
       
-      if (userData && userData.prefs && userData.prefs.avatar) {
-        return { avatarUrl: userData.prefs.avatar };
+      if (response.documents.length > 0) {
+        const post = response.documents[0];
+        if (post.authorAvatar) {
+          return { avatarUrl: post.authorAvatar };
+        }
       }
+    } catch (error) {
+      console.log('No matching posts found or no authorAvatar');
     }
     
     return null;
