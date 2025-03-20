@@ -8,6 +8,9 @@ import Link from 'next/link';
 import { FiArrowLeft } from 'react-icons/fi';
 import DOMPurify from 'isomorphic-dompurify';
 
+// Add revalidation
+export const revalidate = 0;
+
 interface BlogPostPageProps {
   params: {
     param: string;
@@ -195,6 +198,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             fill
             className="object-cover"
             priority
+            unoptimized
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
           />
           
           {!post.published && (
