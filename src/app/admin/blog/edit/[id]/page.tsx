@@ -272,7 +272,7 @@ export default function EditBlogPostPage({ params }: { params: { id: string } })
 
       toast.success('Blog post updated successfully!');
       if (isPublished) {
-        router.push(`/blog/${updatedPost.slug}`);
+        router.push(`/blog/${updatedPost.$id}/${updatedPost.slug}`);
       } else {
         router.push('/admin/blog/manage');
       }

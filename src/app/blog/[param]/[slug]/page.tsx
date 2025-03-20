@@ -6,6 +6,7 @@ import { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { FiArrowLeft } from 'react-icons/fi';
+import DOMPurify from 'isomorphic-dompurify';
 
 interface BlogPostPageProps {
   params: {
@@ -245,7 +246,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
         <div 
           className="prose prose-lg dark:prose-invert max-w-none" 
-          dangerouslySetInnerHTML={{ __html: post.content }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
         />
       </div>
     </article>

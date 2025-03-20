@@ -204,7 +204,7 @@ export default function AdminBlogPage() {
 
       toast.success('Blog post created successfully!');
       if (isPublished) {
-        router.push(`/blog/${slug}`);
+        router.push(`/blog/${post.$id}/${slug}`);
       } else {
         router.push('/admin/blog/manage');
       }

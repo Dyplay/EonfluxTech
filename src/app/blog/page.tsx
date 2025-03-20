@@ -128,7 +128,7 @@ export default async function BlogPage() {
           return (
             <Link 
               key={post.$id}
-              href={`/blog/${post.slug}`}
+              href={`/blog/${post.$id}/${post.slug}`}
               className="block group"
             >
               <article className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
