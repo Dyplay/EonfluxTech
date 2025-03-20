@@ -5,6 +5,8 @@ import { BlogPost, Author } from '@/lib/types';
 import { Query } from 'appwrite';
 import { cookies } from 'next/headers';
 import { FiEdit2 } from 'react-icons/fi';
+import { LikeButton } from './components/LikeButton';
+import { SaveButton } from './components/SaveButton';
 
 // Function to get user data including preferences (avatar)
 async function getUserById(userId: string) {
@@ -94,6 +96,9 @@ async function getAuthor(authorId: string): Promise<Author | null> {
 
 export default async function BlogPage() {
   const posts = await getBlogPosts();
+  const cookieStore = cookies();
+  const sessionCookie = cookieStore.get('appwrite_session');
+  const isAuthenticated = !!sessionCookie;
 
   return (
     <div className="container py-12">
@@ -138,35 +143,51 @@ export default async function BlogPage() {
             }
             
             return (
-              <Link 
-                key={post.$id}
-                href={`/blog/${post.$id}/${post.slug}`}
-                className="block group"
-              >
+              <div key={post.$id} className="group">
                 <article className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="aspect-[21/9] relative">
-                    <Image
-                      src={post.bannerImage}
-                      alt={post.title}
-                      width={2100}
-                      height={900}
-                      className="object-cover w-full h-full"
-                      quality={100}
-                      priority
-                      unoptimized
-                    />
-                    
-                    {!post.published && (
-                      <div className="absolute top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                        Draft
-                      </div>
-                    )}
-                  </div>
+                  <Link href={`/blog/${post.$id}/${post.slug}`}>
+                    <div className="aspect-[21/9] relative">
+                      <Image
+                        src={post.bannerImage}
+                        alt={post.title}
+                        width={2100}
+                        height={900}
+                        className="object-cover w-full h-full"
+                        quality={100}
+                        priority
+                        unoptimized
+                      />
+                      
+                      {!post.published && (
+                        <div className="absolute top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                          Draft
+                        </div>
+                      )}
+                    </div>
+                  </Link>
                   
                   <div className="p-6">
-                    <h2 className="text-2xl font-bold mb-4 group-hover:text-primary transition-colors">
-                      {post.title}
-                    </h2>
+                    <div className="flex justify-between items-start mb-4">
+                      <Link href={`/blog/${post.$id}/${post.slug}`}>
+                        <h2 className="text-2xl font-bold group-hover:text-primary transition-colors">
+                          {post.title}
+                        </h2>
+                      </Link>
+                      <div className="flex items-center gap-2">
+                        <LikeButton
+                          postId={post.$id}
+                          initialLikes={post.likes || 0}
+                          initialLikedByUser={false}
+                        />
+                        <SaveButton
+                          postId={post.$id}
+                          postTitle={post.title}
+                          postSlug={post.slug}
+                          postBannerImage={post.bannerImage}
+                          postExcerpt={post.excerpt}
+                        />
+                      </div>
+                    </div>
                     
                     <div className="flex items-center gap-3 mb-4">
                       <div className="relative h-10 w-10 rounded-full overflow-hidden bg-primary/10">
@@ -200,12 +221,12 @@ export default async function BlogPage() {
                       {post.excerpt || post.content.substring(0, 200).replace(/<[^>]*>/g, '')}...
                     </div>
                     
-                    <span className="text-primary font-medium group-hover:underline">
+                    <Link href={`/blog/${post.$id}/${post.slug}`} className="text-primary font-medium group-hover:underline">
                       Read more →
-                    </span>
+                    </Link>
                   </div>
                 </article>
-              </Link>
+              </div>
             );
           })}
         </div>

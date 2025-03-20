@@ -12,6 +12,8 @@ export interface BlogPost {
   tags?: string | string[];
   createdAt: string;
   updatedAt: string;
+  likes: number;
+  likedBy?: string[];
 }
 
 export interface Author {
@@ -26,4 +28,16 @@ export interface ContactForm {
   email: string;
   subject: string;
   message: string;
+}
+
+export interface SavedPost {
+  $id: string;
+  userId: string;
+  postId: string;
+  savedAt: string;
+  // Reference fields from the original post for quick access
+  postTitle: string;
+  postSlug: string;
+  postBannerImage: string;
+  postExcerpt?: string;
 } 

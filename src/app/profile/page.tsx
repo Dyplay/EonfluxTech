@@ -10,6 +10,7 @@ import AvatarUpload from '../components/AvatarUpload';
 import SessionActivity from '../components/SessionActivity';
 import Header from '../components/Header';
 import GumroadConnection from '../components/GumroadConnection';
+import { SavedPosts } from './components/SavedPosts';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -97,6 +98,18 @@ export default function ProfilePage() {
       setError(err.message);
     }
   };
+
+  if (!user) {
+    return (
+      <div className="container max-w-6xl py-8">
+        <div className="animate-pulse space-y-8">
+          <div className="h-32 bg-card rounded-lg"></div>
+          <div className="h-64 bg-card rounded-lg"></div>
+          <div className="h-48 bg-card rounded-lg"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -292,6 +305,22 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Saved Posts Section */}
+        {user && user.$id && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-12"
+          >
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold">Saved Posts</h2>
+              <p className="text-muted-foreground">Your reading list for later</p>
+            </div>
+            <SavedPosts userId={user.$id} />
+          </motion.section>
         )}
       </div>
     </>

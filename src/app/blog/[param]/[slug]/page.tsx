@@ -5,8 +5,10 @@ import { BlogPost, Author } from '@/lib/types';
 import { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
+import { LikeButton } from '../../components/LikeButton';
 import { FiArrowLeft } from 'react-icons/fi';
 import DOMPurify from 'isomorphic-dompurify';
+import { SaveButton } from '../../components/SaveButton';
 
 // Add revalidation
 export const revalidate = 0;
@@ -226,7 +228,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </div>
             )}
           </div>
-          
           <div>
             <p className="font-medium">{author?.name || post.authorName || 'Anonymous'}</p>
             <p className="text-sm text-muted-foreground">
@@ -238,7 +239,21 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </p>
           </div>
         </div>
-        
+        <div className='flex items-center gap-3 mb-8 pb-6'>
+          <LikeButton
+            postId={post.$id}
+            initialLikes={post.likes || 0}
+            initialLikedByUser={false}
+          />
+        <SaveButton
+          postId={post.$id}
+          postTitle={post.title}
+          postSlug={post.slug}
+          postBannerImage={post.bannerImage}
+          postExcerpt={post.excerpt}
+          initialSaved={false}
+        />
+        </div>
         {postTags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {postTags.map((tag) => (
