@@ -5,6 +5,7 @@ import { TranslationProvider } from "@/app/components/TranslationProvider";
 import { ThemeProvider } from "@/app/components/ThemeProvider";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
+import { PathTracker } from "./components/PathTracker";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -46,6 +47,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider>
           <TranslationProvider>
+            <PathTracker />
             <Header />
             <main className="min-h-screen">
               {children}

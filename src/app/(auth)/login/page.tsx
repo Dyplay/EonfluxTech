@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { login, register } from '@/lib/auth';
+import { account } from '@/lib/appwrite';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -34,6 +35,25 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  // Check for existing session
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const session = await account.getSession('current');
+        if (session) {
+          // Get the previous path from localStorage, or default to home
+          const previousPath = localStorage.getItem('previousPath') || '/';
+          router.push(previousPath);
+        }
+      } catch (error) {
+        // No session exists, stay on login page
+        console.log('No active session');
+      }
+    };
+
+    checkSession();
+  }, [router]);
+
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
@@ -46,30 +66,52 @@ export default function AuthPage() {
     setIsLoading(true);
     setError(null);
 
-    const { error } = await login(data.email, data.password);
+    try {
+      const { error } = await login(data.email, data.password);
 
-    if (error) {
-      setError(error.message);
+      if (error) {
+        setError(error.message);
+        setIsLoading(false);
+        return;
+      }
+
+      // Store the current path before login
+      const previousPath = window.location.pathname;
+      localStorage.setItem('previousPath', previousPath);
+
+      // Force a full page refresh
+      window.location.href = '/';
+      
+    } catch (error: any) {
+      setError(error.message || 'An error occurred during login');
       setIsLoading(false);
-      return;
     }
-
-    router.push('/#');
   };
 
   const onSubmitRegister = async (data: RegisterFormData) => {
     setIsLoading(true);
     setError(null);
 
-    const { error } = await register(data.email, data.password, data.name);
+    try {
+      const { error } = await register(data.email, data.password, data.name);
 
-    if (error) {
-      setError(error.message);
+      if (error) {
+        setError(error.message);
+        setIsLoading(false);
+        return;
+      }
+
+      // Store the current path before registration
+      const previousPath = window.location.pathname;
+      localStorage.setItem('previousPath', previousPath);
+
+      // Force a full page refresh
+      window.location.href = '/';
+      
+    } catch (error: any) {
+      setError(error.message || 'An error occurred during registration');
       setIsLoading(false);
-      return;
     }
-
-    router.push('/#');
   };
 
   return (
