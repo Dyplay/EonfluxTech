@@ -17,12 +17,12 @@ export function LikeButton({ postId, initialLikes }: LikeButtonProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(initialLikes);
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   // Check if user has already liked the post
   useEffect(() => {
     const checkIfLiked = async () => {
-      if (!user) return;
+      if (authLoading || !user) return;
       
       try {
         const response = await databases.listDocuments(
@@ -40,11 +40,13 @@ export function LikeButton({ postId, initialLikes }: LikeButtonProps) {
     };
 
     checkIfLiked();
-  }, [user, postId]);
+  }, [user, postId, authLoading]);
 
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (authLoading) return;
     
     if (!user) {
       toast.error('Please login to like posts');
@@ -114,14 +116,14 @@ export function LikeButton({ postId, initialLikes }: LikeButtonProps) {
   return (
     <button
       onClick={handleLike}
-      disabled={isLoading}
+      disabled={isLoading || authLoading}
       className={`relative p-2 rounded-full transition-colors flex items-center gap-1 ${
         isLiked ? 'text-red-500 bg-red-500/10' : 'text-gray-400 hover:text-red-500 hover:bg-red-500/10'
       }`}
       aria-label={isLiked ? 'Unlike post' : 'Like post'}
     >
       <AnimatePresence>
-        {isLoading && (
+        {(isLoading || authLoading) && (
           <motion.div
             className="absolute inset-0 rounded-full bg-red-500/20"
             initial={{ scale: 0.5, opacity: 1 }}
