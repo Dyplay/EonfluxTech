@@ -17,14 +17,23 @@ export function LikeButton({ postId, initialLikes }: LikeButtonProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(initialLikes);
   const [isLoading, setIsLoading] = useState(false);
-  const { user, loading: authLoading } = useAuth();
+  const [likeDocId, setLikeDocId] = useState<string | null>(null);
+  const auth = useAuth();
+  const user = auth?.user || null;
+  const loading = auth?.loading !== undefined ? auth.loading : true;
 
-  // Check if user has already liked the post
+  // Check if post is already liked when component mounts or user changes
   useEffect(() => {
-    const checkIfLiked = async () => {
-      if (authLoading || !user) return;
+    async function checkLikeStatus() {
+      if (!user) {
+        setIsLiked(false);
+        return;
+      }
+
+      console.log("Checking like status for user:", user.$id, "and post:", postId);
       
       try {
+        console.log("Database ID:", process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID);
         const response = await databases.listDocuments(
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
           'post_likes',
@@ -33,58 +42,62 @@ export function LikeButton({ postId, initialLikes }: LikeButtonProps) {
             Query.equal('postId', postId)
           ]
         );
-        setIsLiked(response.documents.length > 0);
+
+        console.log("Like status response:", response);
+        
+        if (response.documents.length > 0) {
+          console.log("Post is liked, doc ID:", response.documents[0].$id);
+          setIsLiked(true);
+          setLikeDocId(response.documents[0].$id);
+        } else {
+          console.log("Post is not liked");
+          setIsLiked(false);
+          setLikeDocId(null);
+        }
       } catch (error) {
         console.error('Error checking like status:', error);
       }
-    };
+    }
 
-    checkIfLiked();
-  }, [user, postId, authLoading]);
+    console.log("Auth state:", { user, loading });
+    
+    if (!loading) {
+      checkLikeStatus();
+    }
+  }, [user, loading, postId]);
 
-  const handleLike = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (authLoading) return;
-    
+  const handleLike = async () => {
     if (!user) {
       toast.error('Please login to like posts');
       return;
     }
 
     setIsLoading(true);
+
     try {
-      if (isLiked) {
-        // Remove like
-        const response = await databases.listDocuments(
+      if (isLiked && likeDocId) {
+        // Unlike post
+        await databases.deleteDocument(
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
           'post_likes',
-          [
-            Query.equal('userId', user.$id),
-            Query.equal('postId', postId)
-          ]
+          likeDocId
         );
-        
-        if (response.documents.length > 0) {
-          await databases.deleteDocument(
-            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-            'post_likes',
-            response.documents[0].$id
-          );
-          setLikeCount(prev => prev - 1);
-          
-          // Update post likes count
-          await databases.updateDocument(
-            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-            'blogs',
-            postId,
-            { likes: likeCount - 1 }
-          );
-        }
+
+        // Update post likes count in the blogs collection
+        await databases.updateDocument(
+          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+          'blogs',
+          postId,
+          { likes: likeCount - 1 }
+        );
+
+        setLikeCount(prev => prev - 1);
+        setIsLiked(false);
+        setLikeDocId(null);
+        toast.success('Post unliked');
       } else {
-        // Add like
-        await databases.createDocument(
+        // Like post
+        const newLike = await databases.createDocument(
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
           'post_likes',
           ID.unique(),
@@ -94,17 +107,20 @@ export function LikeButton({ postId, initialLikes }: LikeButtonProps) {
             likedAt: new Date().toISOString()
           }
         );
-        setLikeCount(prev => prev + 1);
-        
-        // Update post likes count
+
+        // Update post likes count in the blogs collection
         await databases.updateDocument(
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
           'blogs',
           postId,
           { likes: likeCount + 1 }
         );
+
+        setLikeCount(prev => prev + 1);
+        setIsLiked(true);
+        setLikeDocId(newLike.$id);
+        toast.success('Post liked');
       }
-      setIsLiked(!isLiked);
     } catch (error) {
       console.error('Error updating like:', error);
       toast.error('Failed to update like');
@@ -116,14 +132,14 @@ export function LikeButton({ postId, initialLikes }: LikeButtonProps) {
   return (
     <button
       onClick={handleLike}
-      disabled={isLoading || authLoading}
+      disabled={isLoading || loading || !user}
       className={`relative p-2 rounded-full transition-colors flex items-center gap-1 ${
         isLiked ? 'text-red-500 bg-red-500/10' : 'text-gray-400 hover:text-red-500 hover:bg-red-500/10'
       }`}
       aria-label={isLiked ? 'Unlike post' : 'Like post'}
     >
       <AnimatePresence>
-        {(isLoading || authLoading) && (
+        {isLoading && (
           <motion.div
             className="absolute inset-0 rounded-full bg-red-500/20"
             initial={{ scale: 0.5, opacity: 1 }}

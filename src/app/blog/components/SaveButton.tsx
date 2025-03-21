@@ -19,14 +19,23 @@ interface SaveButtonProps {
 export function SaveButton({ postId, postTitle, postSlug, postBannerImage, postExcerpt }: SaveButtonProps) {
   const [isSaved, setIsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { user, loading: authLoading } = useAuth();
+  const [saveDocId, setSaveDocId] = useState<string | null>(null);
+  const auth = useAuth();
+  const user = auth?.user || null;
+  const loading = auth?.loading !== undefined ? auth.loading : true;
 
-  // Check if post is already saved when component mounts
+  // Check if post is already saved when component mounts or user changes
   useEffect(() => {
-    const checkIfSaved = async () => {
-      if (authLoading || !user) return;
+    async function checkSaveStatus() {
+      if (!user) {
+        setIsSaved(false);
+        return;
+      }
+
+      console.log("Checking save status for user:", user.$id, "and post:", postId);
       
       try {
+        console.log("Database ID:", process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID);
         const response = await databases.listDocuments(
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
           'saved_posts',
@@ -35,48 +44,53 @@ export function SaveButton({ postId, postTitle, postSlug, postBannerImage, postE
             Query.equal('postId', postId)
           ]
         );
-        setIsSaved(response.documents.length > 0);
+
+        console.log("Save status response:", response);
+        
+        if (response.documents.length > 0) {
+          console.log("Post is saved, doc ID:", response.documents[0].$id);
+          setIsSaved(true);
+          setSaveDocId(response.documents[0].$id);
+        } else {
+          console.log("Post is not saved");
+          setIsSaved(false);
+          setSaveDocId(null);
+        }
       } catch (error) {
-        console.error('Error checking saved status:', error);
+        console.error('Error checking save status:', error);
       }
-    };
+    }
 
-    checkIfSaved();
-  }, [user, postId, authLoading]);
+    console.log("Auth state:", { user, loading });
+    
+    if (!loading) {
+      checkSaveStatus();
+    }
+  }, [user, loading, postId]);
 
-  const handleSave = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (authLoading) return;
-    
+  const handleSave = async () => {
     if (!user) {
       toast.error('Please login to save posts');
       return;
     }
 
     setIsLoading(true);
+
     try {
-      if (isSaved) {
-        const response = await databases.listDocuments(
+      if (isSaved && saveDocId) {
+        // Unsave post
+        await databases.deleteDocument(
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
           'saved_posts',
-          [
-            Query.equal('userId', user.$id),
-            Query.equal('postId', postId)
-          ]
+          saveDocId
         );
-        
-        if (response.documents.length > 0) {
-          await databases.deleteDocument(
-            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-            'saved_posts',
-            response.documents[0].$id
-          );
-        }
+
+        setIsSaved(false);
+        setSaveDocId(null);
         toast.success('Post removed from saved');
       } else {
-        await databases.createDocument(
+        // Save post
+        const newSave = await databases.createDocument(
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
           'saved_posts',
           ID.unique(),
@@ -90,12 +104,14 @@ export function SaveButton({ postId, postTitle, postSlug, postBannerImage, postE
             savedAt: new Date().toISOString()
           }
         );
+
+        setIsSaved(true);
+        setSaveDocId(newSave.$id);
         toast.success('Post saved successfully');
       }
-      setIsSaved(!isSaved);
     } catch (error) {
-      console.error('Error saving post:', error);
-      toast.error('Failed to save post');
+      console.error('Error updating saved status:', error);
+      toast.error('Failed to update saved status');
     } finally {
       setIsLoading(false);
     }
@@ -104,14 +120,14 @@ export function SaveButton({ postId, postTitle, postSlug, postBannerImage, postE
   return (
     <button
       onClick={handleSave}
-      disabled={isLoading || authLoading}
+      disabled={isLoading || loading || !user}
       className={`relative p-2 rounded-full transition-colors ${
         isSaved ? 'text-primary bg-primary/10' : 'text-gray-400 hover:text-primary hover:bg-primary/10'
       }`}
       aria-label={isSaved ? 'Unsave post' : 'Save post'}
     >
       <AnimatePresence>
-        {(isLoading || authLoading) && (
+        {isLoading && (
           <motion.div
             className="absolute inset-0 rounded-full bg-primary/20"
             initial={{ scale: 0.5, opacity: 1 }}
