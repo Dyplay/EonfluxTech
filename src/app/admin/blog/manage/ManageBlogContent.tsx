@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { databases, storage } from '@/lib/appwrite';
-import { Query } from 'appwrite';
+import { Query, Models } from 'appwrite';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -13,8 +13,15 @@ import {
 } from 'react-icons/fi';
 import BlogAdminNav from '@/app/components/admin/BlogAdminNav';
 
+interface BlogPost extends Models.Document {
+  title: string;
+  slug: string;
+  content: string;
+  published: boolean;
+}
+
 export default function ManageBlogContent() {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const router = useRouter();
@@ -31,7 +38,7 @@ export default function ManageBlogContent() {
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
           'blogs'
         );
-        setPosts(response.documents);
+        setPosts(response.documents as BlogPost[]);
       } catch (error) {
         console.error('Error fetching posts:', error);
         toast.error('Failed to fetch posts');
