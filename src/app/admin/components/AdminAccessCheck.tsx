@@ -6,81 +6,86 @@ import { useAuth } from '@/hooks/useAuth';
 
 export default function AdminAccessCheck({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
-  const [accessGranted, setAccessGranted] = useState(false);
+  const [accessChecked, setAccessChecked] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const { user, loading, checkIsAdmin, refetchUser } = useAuth();
+  const { user, loading, checkIsAdmin } = useAuth();
+
+  // Just for debugging
+  useEffect(() => {
+    if (user) {
+      console.log("USER DATA IN ACCESS CHECK:", {
+        id: user.$id,
+        labels: user.labels,
+        isAdmin: user.labels?.includes('admin'),
+        checkIsAdmin: checkIsAdmin()
+      });
+    }
+  }, [user, checkIsAdmin]);
 
   useEffect(() => {
-    const initialize = async () => {
-      setMounted(true);
-      
-      // Refetch user data to ensure it's fresh
-      if (!loading) {
-        await refetchUser();
-      }
-    };
-    
-    initialize();
-  }, [refetchUser, loading]);
+    // Mark component as mounted
+    setMounted(true);
+  }, []);
 
+  // Separate effect for checking access
   useEffect(() => {
-    // Only perform checks after mounting and when authentication is complete
+    // Skip if not mounted or still loading auth
     if (!mounted || loading) return;
-    
-    console.log(`AdminAccessCheck [${pathname}]:`, { 
-      userId: user?.$id,
-      isAdmin: checkIsAdmin(),
-      userPrefs: user?.prefs,
-      userLabels: user?.labels
-    });
-    
-    // Delay to prevent flashing content and redirects
+
+    // Wait a bit to ensure user data is fully loaded
     const timer = setTimeout(() => {
-      if (user && checkIsAdmin()) {
-        console.log("✅ Admin access granted");
-        setAccessGranted(true);
+      const isAdmin = checkIsAdmin();
+      console.log(`🔒 ACCESS CHECK [${pathname}]:`, { 
+        userId: user?.$id,
+        userLabels: user?.labels,
+        isAdminByFunc: isAdmin,
+        checkMethod: 'labels.includes'
+      });
+      
+      if (user && isAdmin) {
+        console.log("✅ Admin access GRANTED");
+        setHasAccess(true);
       } else {
-        console.log("❌ Access denied, redirecting to login");
-        router.push('/login');
+        console.log("❌ Admin access DENIED", {
+          hasUser: !!user,
+          userObj: user,
+          checkIsAdminResult: isAdmin
+        });
+        setHasAccess(false);
       }
-    }, 1000);
+      
+      setAccessChecked(true);
+    }, 2000); // Wait 2 seconds to be safe
     
     return () => clearTimeout(timer);
-  }, [user, loading, router, checkIsAdmin, mounted, pathname]);
+  }, [user, loading, checkIsAdmin, mounted, pathname]);
 
-  // Show loading while checking
-  if (!mounted || loading || (!accessGranted && user)) {
+  // Final effect for redirect if needed
+  useEffect(() => {
+    // Only redirect after explicit access check is complete
+    if (accessChecked && !hasAccess) {
+      console.log("🚨 Redirecting to login due to access denial");
+      router.push('/login');
+    }
+  }, [accessChecked, hasAccess, router]);
+
+  // Show a loading state
+  if (!mounted || loading || !accessChecked) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
           <p className="text-sm text-secondary">Verifying admin access...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show access denied message (this will show briefly before redirect)
-  if (!user || !accessGranted) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p className="mb-4 text-xl">Access Denied</p>
-          <p className="text-secondary">You don't have permission to access this page.</p>
-          <p className="text-sm text-secondary mt-2">
-            {user ? "Your account doesn't have admin privileges." : "Please log in first."}
+          <p className="text-xs text-muted-foreground mt-2">
+            {loading ? "Loading authentication..." : "Checking permissions..."}
           </p>
-          <button 
-            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md"
-            onClick={() => router.push('/login')}
-          >
-            Go to Login
-          </button>
         </div>
       </div>
     );
   }
 
+  // If we get here, access is checked and granted
   return <>{children}</>;
 } 

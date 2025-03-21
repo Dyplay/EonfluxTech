@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 export default function AdminBlogContent() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
-  const { user, loading, isAdmin, checkIsAdmin } = useAuth();
+  const { user, loading, checkIsAdmin } = useAuth();
 
   useEffect(() => {
     setMounted(true);
@@ -30,6 +30,10 @@ export default function AdminBlogContent() {
 
   // Rest of the component remains the same
   return (
-    // ... your admin page content
+    <div className="container py-8">
+      {/* Your admin page content */}
+      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+      {/* Add your admin content here */}
+    </div>
   );
 } 
