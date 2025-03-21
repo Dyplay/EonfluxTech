@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/app/components/ThemeProvider";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { PathTracker } from "./components/PathTracker";
+import { AuthProvider } from '@/hooks/useAuth';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -46,16 +47,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider>
-          <TranslationProvider>
-            <PathTracker />
-            <Header />
-            <main className="min-h-screen">
-              {children}
-            </main>
-            <Footer />
-          </TranslationProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <TranslationProvider>
+              <PathTracker />
+              <Header />
+              <main className="min-h-screen">
+                {children}
+              </main>
+              <Footer />
+            </TranslationProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

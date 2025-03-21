@@ -19,7 +19,8 @@ interface SaveButtonProps {
 export function SaveButton({ postId, postTitle, postSlug, postBannerImage, postExcerpt }: SaveButtonProps) {
   const [isSaved, setIsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
+  const auth = useAuth();
+  const user = auth?.user;
 
   // Check if post is already saved when component mounts
   useEffect(() => {
@@ -41,10 +42,12 @@ export function SaveButton({ postId, postTitle, postSlug, postBannerImage, postE
       }
     };
 
-    checkIfSaved();
+    if (user) {
+      checkIfSaved();
+    }
   }, [user, postId]);
 
-  const handleSave = async (e: React.MouseEvent) => {
+  const handleSave = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -54,48 +57,64 @@ export function SaveButton({ postId, postTitle, postSlug, postBannerImage, postE
     }
 
     setIsLoading(true);
-    try {
-      if (isSaved) {
-        const response = await databases.listDocuments(
-          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-          'saved_posts',
-          [
-            Query.equal('userId', user.$id),
-            Query.equal('postId', postId)
-          ]
-        );
-        
+    
+    if (isSaved) {
+      // Remove saved post
+      databases.listDocuments(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'saved_posts',
+        [
+          Query.equal('userId', user.$id),
+          Query.equal('postId', postId)
+        ]
+      )
+      .then(response => {
         if (response.documents.length > 0) {
-          await databases.deleteDocument(
+          return databases.deleteDocument(
             process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
             'saved_posts',
             response.documents[0].$id
           );
         }
+      })
+      .then(() => {
+        setIsSaved(false);
         toast.success('Post removed from saved');
-      } else {
-        await databases.createDocument(
-          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-          'saved_posts',
-          ID.unique(),
-          {
-            userId: user.$id,
-            postId,
-            postTitle,
-            postSlug,
-            postBannerImage,
-            postExcerpt,
-            savedAt: new Date().toISOString()
-          }
-        );
+      })
+      .catch(error => {
+        console.error('Error removing saved post:', error);
+        toast.error('Failed to remove post from saved');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+    } else {
+      // Save the post
+      databases.createDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'saved_posts',
+        ID.unique(),
+        {
+          userId: user.$id,
+          postId,
+          postTitle,
+          postSlug,
+          postBannerImage,
+          postExcerpt,
+          savedAt: new Date().toISOString()
+        }
+      )
+      .then(() => {
+        setIsSaved(true);
         toast.success('Post saved successfully');
-      }
-      setIsSaved(!isSaved);
-    } catch (error) {
-      console.error('Error saving post:', error);
-      toast.error('Failed to save post');
-    } finally {
-      setIsLoading(false);
+      })
+      .catch(error => {
+        console.error('Error saving post:', error);
+        toast.error('Failed to save post');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
     }
   };
 
