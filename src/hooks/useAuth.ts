@@ -10,13 +10,8 @@ export function useAuth() {
     // Check if user is logged in
     const checkAuth = async () => {
       try {
-        const session = await account.getSession('current');
-        if (session) {
-          const user = await account.get();
-          setUser(user);
-        } else {
-          setUser(null);
-        }
+        const session = await account.get();
+        setUser(session);
       } catch (error) {
         setUser(null);
       } finally {
@@ -29,7 +24,7 @@ export function useAuth() {
 
   const login = async (email: string, password: string) => {
     try {
-      await account.createEmailPasswordSession(email, password);
+      const session = await account.createEmailPasswordSession(email, password);
       const user = await account.get();
       setUser(user);
       return { success: true };

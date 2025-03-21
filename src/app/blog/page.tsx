@@ -5,8 +5,7 @@ import { BlogPost, Author } from '@/lib/types';
 import { Query } from 'appwrite';
 import { cookies } from 'next/headers';
 import { FiEdit2 } from 'react-icons/fi';
-import { LikeButton } from './components/LikeButton';
-import { SaveButton } from './components/SaveButton';
+import { BlogPostActions } from './components/BlogPostActions';
 
 export const dynamic = 'force-dynamic';
 
@@ -175,19 +174,14 @@ export default async function BlogPage() {
                           {post.title}
                         </h2>
                       </Link>
-                      <div className="flex items-center gap-2">
-                        <LikeButton
-                          postId={post.$id}
-                          initialLikes={post.likes || 0}
-                        />
-                        <SaveButton
-                          postId={post.$id}
-                          postTitle={post.title}
-                          postSlug={post.slug}
-                          postBannerImage={post.bannerImage}
-                          postExcerpt={post.excerpt}
-                        />
-                      </div>
+                      <BlogPostActions
+                        postId={post.$id}
+                        postTitle={post.title}
+                        postSlug={post.slug}
+                        postBannerImage={post.bannerImage}
+                        postExcerpt={post.excerpt}
+                        initialLikes={post.likes || 0}
+                      />
                     </div>
                     
                     <div className="flex items-center gap-3 mb-4">

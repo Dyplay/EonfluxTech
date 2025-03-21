@@ -19,12 +19,12 @@ interface SaveButtonProps {
 export function SaveButton({ postId, postTitle, postSlug, postBannerImage, postExcerpt }: SaveButtonProps) {
   const [isSaved, setIsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   // Check if post is already saved when component mounts
   useEffect(() => {
     const checkIfSaved = async () => {
-      if (!user) return;
+      if (authLoading || !user) return;
       
       try {
         const response = await databases.listDocuments(
@@ -42,11 +42,13 @@ export function SaveButton({ postId, postTitle, postSlug, postBannerImage, postE
     };
 
     checkIfSaved();
-  }, [user, postId]);
+  }, [user, postId, authLoading]);
 
   const handleSave = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (authLoading) return;
     
     if (!user) {
       toast.error('Please login to save posts');
@@ -102,14 +104,14 @@ export function SaveButton({ postId, postTitle, postSlug, postBannerImage, postE
   return (
     <button
       onClick={handleSave}
-      disabled={isLoading}
+      disabled={isLoading || authLoading}
       className={`relative p-2 rounded-full transition-colors ${
         isSaved ? 'text-primary bg-primary/10' : 'text-gray-400 hover:text-primary hover:bg-primary/10'
       }`}
       aria-label={isSaved ? 'Unsave post' : 'Save post'}
     >
       <AnimatePresence>
-        {isLoading && (
+        {(isLoading || authLoading) && (
           <motion.div
             className="absolute inset-0 rounded-full bg-primary/20"
             initial={{ scale: 0.5, opacity: 1 }}
