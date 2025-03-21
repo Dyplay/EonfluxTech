@@ -23,10 +23,12 @@ interface BlogPost extends Models.Document {
 export default function ManageBlogContent() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
+    if (authLoading) return;
+    
     if (!user) {
       router.push('/login');
       return;
@@ -48,7 +50,7 @@ export default function ManageBlogContent() {
     };
 
     fetchPosts();
-  }, [user, router]);
+  }, [user, router, authLoading]);
 
   const handleDelete = async (postId: string) => {
     if (!confirm('Are you sure you want to delete this post?')) return;
@@ -67,12 +69,16 @@ export default function ManageBlogContent() {
     }
   };
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
