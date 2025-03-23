@@ -24,8 +24,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Update user preferences to make them admin
-    const updatedPrefs = await account.updatePrefs({ admin: true }, userId);
-    
+    const updatedPrefs = await account.updatePrefs({ admin: true });
+
     return NextResponse.json({ 
       success: true, 
       message: 'Admin privileges granted',

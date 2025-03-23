@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { TranslationProvider } from "@/app/components/TranslationProvider";
-import { ThemeProvider } from "@/app/components/ThemeProvider";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { PathTracker } from "./components/PathTracker";
-import { AuthProvider } from '@/hooks/useAuth';
+import { Providers } from "@/components/Providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -47,18 +45,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <AuthProvider>
-          <ThemeProvider>
-            <TranslationProvider>
-              <PathTracker />
-              <Header />
-              <main className="min-h-screen">
-                {children}
-              </main>
-              <Footer />
-            </TranslationProvider>
-          </ThemeProvider>
-        </AuthProvider>
+        <Providers>
+          <PathTracker />
+          <Header />
+          <main className="min-h-screen">
+            {children}
+          </main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );

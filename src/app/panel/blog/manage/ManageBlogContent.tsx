@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { databases, storage } from '@/lib/appwrite';
-import { Query, Models } from 'appwrite';
+import { Query } from 'appwrite';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -13,15 +13,8 @@ import {
 } from 'react-icons/fi';
 import BlogAdminNav from '@/app/components/admin/BlogAdminNav';
 
-// Define the post type based on your Appwrite document structure
-interface Post extends Models.Document {
-  title: string;
-  slug: string;
-  // Add other fields that are in your blog document
-}
-
 export default function ManageBlogContent() {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const router = useRouter();
@@ -38,7 +31,7 @@ export default function ManageBlogContent() {
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
           'blogs'
         );
-        setPosts(response.documents as Post[]);
+        setPosts(response.documents);
       } catch (error) {
         console.error('Error fetching posts:', error);
         toast.error('Failed to fetch posts');

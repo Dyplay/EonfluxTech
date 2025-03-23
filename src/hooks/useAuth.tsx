@@ -59,26 +59,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Check for existing session on mount
   useEffect(() => {
+    let isMounted = true;
+    
     const checkSession = async () => {
+      console.log("🔄 Starting session check...");
       try {
         // Try to get a current session to ensure we're logged in
-        await account.getSession('current');
+        console.log("📝 Checking for current session...");
+        const session = await account.getSession('current');
+        console.log("✅ Session found:", session.$id);
         
         // If that succeeds, get the user
+        console.log("👤 Fetching user data...");
         const currentUser = await account.get();
-        if (currentUser) {
-          console.log("User data loaded:", currentUser);
+        if (currentUser && isMounted) {
+          console.log("✨ User data loaded:", {
+            id: currentUser.$id,
+            name: currentUser.name,
+            labels: currentUser.labels,
+            prefs: currentUser.prefs
+          });
           setUser(currentUser as User);
         }
       } catch (err) {
-        console.error('Session check error:', err);
-        setUser(null);
+        console.error('❌ Session check error:', err);
+        if (isMounted) {
+          console.log("🔄 No valid session found, will redirect to login...");
+          setUser(null);
+          // Don't redirect immediately if we're already on the login page
+          if (window.location.pathname !== '/login') {
+            setTimeout(() => {
+              if (isMounted) {
+                console.log("🔄 Redirecting to login page...");
+                window.location.href = '/login';
+              }
+            }, 2000);
+          }
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     checkSession();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Function to check if user is admin

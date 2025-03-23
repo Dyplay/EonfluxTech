@@ -32,7 +32,9 @@ export function GrantAdminAccess() {
       setMessage(`Admin privileges granted to yourself! Preferences updated: ${JSON.stringify(updatedPrefs)}`);
       
       // Refetch user data
-      await refetchUser();
+      if (refetchUser) {
+        await refetchUser();
+      }
     } catch (error: any) {
       setMessage(`Error: ${error.message}`);
     } finally {

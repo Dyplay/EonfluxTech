@@ -57,8 +57,35 @@ export async function getCurrentUser() {
 export async function isUserAdmin() {
   try {
     const user = await account.get();
-    return user?.prefs?.admin === true || user?.prefs?.admin === 'true';
+    
+    console.log("CHECKING ADMIN STATUS FOR:", {
+      userId: user.$id,
+      labels: user.labels,
+      prefsAdmin: user.prefs?.admin
+    });
+    
+    // Check for admin in labels
+    if (user?.labels && Array.isArray(user.labels) && user.labels.includes('admin')) {
+      console.log("✅ ADMIN FOUND IN LABELS");
+      return true;
+    }
+    
+    // Check for admin in preferences (multiple formats)
+    const adminPref = user?.prefs?.admin;
+    if (
+      adminPref === true || 
+      adminPref === 'true' || 
+      adminPref === '1' || 
+      adminPref === 1
+    ) {
+      console.log("✅ ADMIN FOUND IN PREFERENCES");
+      return true;
+    }
+    
+    console.log("❌ NO ADMIN PRIVILEGES FOUND");
+    return false;
   } catch (error) {
+    console.error("Error in isUserAdmin:", error);
     return false;
   }
 }
