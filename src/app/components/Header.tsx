@@ -307,7 +307,7 @@ export default function Header() {
                           </Link>
                           {isAdmin && (
                             <Link
-                              href="/admin"
+                              href="/panel"
                               className="flex items-center w-full p-2 text-sm rounded-md hover:bg-accent transition-colors"
                               onClick={() => setIsProfileOpen(false)}
                             >
