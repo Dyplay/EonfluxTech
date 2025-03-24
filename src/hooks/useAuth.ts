@@ -92,6 +92,26 @@ export function useAuth() {
     }
   };
 
+  const checkIsAdmin = () => {
+    if (!user) return false;
+    
+    // Check for admin in labels first (preferred method)
+    if (user.labels && Array.isArray(user.labels) && user.labels.includes('admin')) {
+      console.log("✅ Admin found in labels:", user.labels);
+      return true;
+    }
+    
+    // Fallback: Check for admin in preferences
+    const adminPref = user.prefs?.admin;
+    if (adminPref === true || adminPref === 'true' || adminPref === '1' || adminPref === 1) {
+      console.log("✅ Admin found in preferences:", adminPref);
+      return true;
+    }
+    
+    console.log("❌ No admin privileges found for user:", user.$id);
+    return false;
+  };
+
   return {
     user,
     loading,
@@ -99,5 +119,6 @@ export function useAuth() {
     logout,
     register,
     isAuthenticated: !!user,
+    checkIsAdmin,
   };
 } 

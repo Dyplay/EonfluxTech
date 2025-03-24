@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { databases, storage } from '@/lib/appwrite';
-import { Query, Models } from 'appwrite';
+import { Models } from 'appwrite';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -13,11 +13,14 @@ import {
 } from 'react-icons/fi';
 import BlogAdminNav from '@/app/components/admin/BlogAdminNav';
 
-// Define the post type based on your Appwrite document structure
+// Define post type based on Appwrite document
 interface Post extends Models.Document {
   title: string;
   slug: string;
-  // Add other fields that are in your blog document
+  content?: string;
+  status?: string;
+  author?: string;
+  // Add any other fields that exist in your blog posts
 }
 
 export default function ManageBlogContent() {
@@ -27,11 +30,6 @@ export default function ManageBlogContent() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-
     const fetchPosts = async () => {
       try {
         const response = await databases.listDocuments(
@@ -82,7 +80,7 @@ export default function ManageBlogContent() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Manage Blog Posts</h1>
         <Link 
-          href="/admin/blog"
+          href="/panel/blog/new"
           className="btn btn-primary flex items-center gap-2"
         >
           <FiPlus /> New Post
@@ -111,7 +109,7 @@ export default function ManageBlogContent() {
                 <FiEye />
               </Link>
               <Link
-                href={`/admin/blog/edit/${post.$id}`}
+                href={`/panel/blog/edit/${post.$id}`}
                 className="btn btn-ghost"
               >
                 <FiEdit2 />
@@ -130,7 +128,7 @@ export default function ManageBlogContent() {
           <div className="text-center py-12 bg-accent/30 rounded-lg">
             <p className="text-muted-foreground">No posts found</p>
             <Link 
-              href="/admin/blog"
+              href="/panel/blog/new"
               className="btn btn-primary mt-4"
             >
               Create your first post

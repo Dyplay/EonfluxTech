@@ -9,27 +9,27 @@ export default function BlogAdminNav() {
   
   const navItems = [
     { 
-      href: '/admin/blog/manage', 
+      href: '/panel/blog/manage', 
       label: 'All Posts', 
       icon: <FiList className="w-4 h-4 mr-2" />,
-      match: ['/admin/blog/manage']
+      match: ['/panel/blog/manage']
     },
     { 
-      href: '/admin/blog', 
+      href: '/panel/blog', 
       label: 'Create New', 
       icon: <FiPlus className="w-4 h-4 mr-2" />,
-      match: ['/admin/blog']
+      match: ['/panel/blog']
     },
     { 
-      href: '/admin', 
+      href: '/panel', 
       label: 'Admin Home', 
       icon: <FiHome className="w-4 h-4 mr-2" />,
-      match: ['/admin']
+      match: ['/panel']
     }
   ];
   
   // Check if we're on the edit page
-  const isEditPage = pathname.startsWith('/admin/blog/edit/');
+  const isEditPage = pathname.startsWith('/panel/blog/edit/');
   
   return (
     <div className="bg-accent/50 rounded-lg border border-border mb-6">

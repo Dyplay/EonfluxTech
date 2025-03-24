@@ -19,158 +19,134 @@ interface SaveButtonProps {
 export function SaveButton({ postId, postTitle, postSlug, postBannerImage, postExcerpt }: SaveButtonProps) {
   const [isSaved, setIsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [saveDocId, setSaveDocId] = useState<string | null>(null);
   const auth = useAuth();
+  const user = auth?.user;
 
-  // Check if post is already saved when component mounts or auth state changes
+  // Check if post is already saved when component mounts
   useEffect(() => {
-    console.log("SaveButton - Auth state changed:", 
-      auth.isAuthenticated ? `User: ${auth.user?.$id}` : "Not authenticated", 
-      "Loading:", auth.loading);
-    
-    if (auth.loading) return;
-    
-    async function checkSaveStatus() {
-      if (!auth.isAuthenticated || !auth.user) {
-        console.log("SaveButton - No authenticated user, not checking save status");
-        setIsSaved(false);
-        return;
-      }
-
-      console.log(`SaveButton - Checking save status for user ${auth.user.$id} and post ${postId}`);
+    const checkIfSaved = async () => {
+      if (!user) return;
       
       try {
-        setIsLoading(true);
         const response = await databases.listDocuments(
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
           'saved_posts',
           [
-            Query.equal('userId', auth.user.$id),
+            Query.equal('userId', user.$id),
             Query.equal('postId', postId)
           ]
         );
-        
-        console.log(`SaveButton - Found ${response.documents.length} saved posts`);
-        
-        if (response.documents.length > 0) {
-          console.log(`SaveButton - Post is saved with doc ID ${response.documents[0].$id}`);
-          setIsSaved(true);
-          setSaveDocId(response.documents[0].$id);
-        } else {
-          console.log("SaveButton - Post is not saved");
-          setIsSaved(false);
-          setSaveDocId(null);
-        }
+        setIsSaved(response.documents.length > 0);
       } catch (error) {
-        console.error('Error checking save status:', error);
-        toast.error('Failed to check save status');
-      } finally {
-        setIsLoading(false);
+        console.error('Error checking saved status:', error);
       }
-    }
-    
-    checkSaveStatus();
-  }, [auth.isAuthenticated, auth.loading, auth.user, postId]);
+    };
 
-  const handleSave = async () => {
-    if (!auth.isAuthenticated || !auth.user) {
+    if (user) {
+      checkIfSaved();
+    }
+  }, [user, postId]);
+
+  const handleSave = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
       toast.error('Please login to save posts');
       return;
     }
 
     setIsLoading(true);
-
-    try {
-      if (isSaved && saveDocId) {
-        // Unsave post
-        await databases.deleteDocument(
-          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-          'saved_posts',
-          saveDocId
-        );
-
+    
+    if (isSaved) {
+      // Remove saved post
+      databases.listDocuments(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'saved_posts',
+        [
+          Query.equal('userId', user.$id),
+          Query.equal('postId', postId)
+        ]
+      )
+      .then(response => {
+        if (response.documents.length > 0) {
+          return databases.deleteDocument(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            'saved_posts',
+            response.documents[0].$id
+          );
+        }
+      })
+      .then(() => {
         setIsSaved(false);
-        setSaveDocId(null);
         toast.success('Post removed from saved');
-      } else {
-        // Save post
-        const newSave = await databases.createDocument(
-          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-          'saved_posts',
-          ID.unique(),
-          {
-            userId: auth.user.$id,
-            postId,
-            postTitle,
-            postSlug,
-            postBannerImage,
-            postExcerpt,
-            savedAt: new Date().toISOString()
-          }
-        );
-
+      })
+      .catch(error => {
+        console.error('Error removing saved post:', error);
+        toast.error('Failed to remove post from saved');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+    } else {
+      // Save the post
+      databases.createDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'saved_posts',
+        ID.unique(),
+        {
+          userId: user.$id,
+          postId,
+          postTitle,
+          postSlug,
+          postBannerImage,
+          postExcerpt,
+          savedAt: new Date().toISOString()
+        }
+      )
+      .then(() => {
         setIsSaved(true);
-        setSaveDocId(newSave.$id);
         toast.success('Post saved successfully');
-      }
-    } catch (error) {
-      console.error('Error updating saved status:', error);
-      toast.error('Failed to update saved status');
-    } finally {
-      setIsLoading(false);
+      })
+      .catch(error => {
+        console.error('Error saving post:', error);
+        toast.error('Failed to save post');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
     }
   };
 
   return (
-    <div className="relative pointer-events-none">
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          console.log("Save button clicked!");
-          
-          if (auth.loading) {
-            console.log("Auth is still loading, please wait");
-            toast.error("Please wait while we verify your login");
-            return;
-          }
-          
-          if (!auth.isAuthenticated) {
-            console.log("User not authenticated");
-            toast.error("Please login to save posts");
-            return;
-          }
-          
-          handleSave();
-        }}
-        disabled={isLoading}
-        className={`relative p-2 rounded-full transition-colors ${
-          isSaved ? 'text-primary bg-primary/10' : 'text-gray-400 hover:text-primary hover:bg-primary/10'
-        } cursor-pointer z-10 pointer-events-auto`}
-        aria-label={isSaved ? 'Unsave post' : 'Save post'}
-        type="button"
-      >
-        <AnimatePresence>
-          {isLoading && (
-            <motion.div
-              className="absolute inset-0 rounded-full bg-primary/20"
-              initial={{ scale: 0.5, opacity: 1 }}
-              animate={{ scale: 1.5, opacity: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
-            />
-          )}
-        </AnimatePresence>
-        
-        <motion.div
-          animate={isSaved ? { scale: [1, 1.2, 1] } : { scale: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <FiBookmark
-            className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`}
+    <button
+      onClick={handleSave}
+      disabled={isLoading}
+      className={`relative p-2 rounded-full transition-colors ${
+        isSaved ? 'text-primary bg-primary/10' : 'text-gray-400 hover:text-primary hover:bg-primary/10'
+      }`}
+      aria-label={isSaved ? 'Unsave post' : 'Save post'}
+    >
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            className="absolute inset-0 rounded-full bg-primary/20"
+            initial={{ scale: 0.5, opacity: 1 }}
+            animate={{ scale: 1.5, opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
           />
-        </motion.div>
-      </button>
-    </div>
+        )}
+      </AnimatePresence>
+      
+      <motion.div
+        animate={isSaved ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <FiBookmark
+          className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`}
+        />
+      </motion.div>
+    </button>
   );
 } 
