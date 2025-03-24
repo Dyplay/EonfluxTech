@@ -81,8 +81,8 @@ export default function KeyTestPage() {
             <div className="mt-6 pt-6 border-t border-border">
               <h3 className="text-lg font-medium mb-2">Next Steps</h3>
               <ul className="list-disc pl-5 space-y-2">
-                <li>Visit <a href="/admin/test" className="text-primary hover:underline">API Test Page</a> to test if the API key works with Appwrite</li>
-                <li>Visit <a href="/admin" className="text-primary hover:underline">Admin Dashboard</a> to see if real data is displayed</li>
+                <li>Visit <a href="/panel/test" className="text-primary hover:underline">API Test Page</a> to test if the API key works with Appwrite</li>
+                <li>Visit <a href="/panel" className="text-primary hover:underline">Admin Dashboard</a> to see if real data is displayed</li>
               </ul>
             </div>
           </div>
