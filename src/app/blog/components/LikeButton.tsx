@@ -19,38 +19,36 @@ export function LikeButton({ postId, initialLikes }: LikeButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [likeDocId, setLikeDocId] = useState<string | null>(null);
   const auth = useAuth();
-  const user = auth?.user || null;
-  const loading = auth?.loading !== undefined ? auth.loading : true;
+
+  // Force refresh auth when the component mounts
+  useEffect(() => {
+    if (auth.checkAuth) {
+      auth.checkAuth();
+    }
+  }, []);
 
   // Check if post is already liked when component mounts or user changes
   useEffect(() => {
     async function checkLikeStatus() {
-      if (!user) {
+      if (!auth.user) {
         setIsLiked(false);
         return;
       }
 
-      console.log("Checking like status for user:", user.$id, "and post:", postId);
-      
       try {
-        console.log("Database ID:", process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID);
         const response = await databases.listDocuments(
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
           'post_likes',
           [
-            Query.equal('userId', user.$id),
+            Query.equal('userId', auth.user.$id),
             Query.equal('postId', postId)
           ]
         );
-
-        console.log("Like status response:", response);
         
         if (response.documents.length > 0) {
-          console.log("Post is liked, doc ID:", response.documents[0].$id);
           setIsLiked(true);
           setLikeDocId(response.documents[0].$id);
         } else {
-          console.log("Post is not liked");
           setIsLiked(false);
           setLikeDocId(null);
         }
@@ -58,16 +56,14 @@ export function LikeButton({ postId, initialLikes }: LikeButtonProps) {
         console.error('Error checking like status:', error);
       }
     }
-
-    console.log("Auth state:", { user, loading });
     
-    if (!loading) {
+    if (!auth.loading) {
       checkLikeStatus();
     }
-  }, [user, loading, postId]);
+  }, [auth.user, auth.loading, postId]);
 
   const handleLike = async () => {
-    if (!user) {
+    if (!auth.user) {
       toast.error('Please login to like posts');
       return;
     }
@@ -102,7 +98,7 @@ export function LikeButton({ postId, initialLikes }: LikeButtonProps) {
           'post_likes',
           ID.unique(),
           {
-            userId: user.$id,
+            userId: auth.user.$id,
             postId,
             likedAt: new Date().toISOString()
           }
@@ -130,35 +126,43 @@ export function LikeButton({ postId, initialLikes }: LikeButtonProps) {
   };
 
   return (
-    <button
-      onClick={handleLike}
-      disabled={isLoading || loading || !user}
-      className={`relative p-2 rounded-full transition-colors flex items-center gap-1 ${
-        isLiked ? 'text-red-500 bg-red-500/10' : 'text-gray-400 hover:text-red-500 hover:bg-red-500/10'
-      }`}
-      aria-label={isLiked ? 'Unlike post' : 'Like post'}
-    >
-      <AnimatePresence>
-        {isLoading && (
-          <motion.div
-            className="absolute inset-0 rounded-full bg-red-500/20"
-            initial={{ scale: 0.5, opacity: 1 }}
-            animate={{ scale: 1.5, opacity: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          />
-        )}
-      </AnimatePresence>
-      
-      <motion.div
-        animate={isLiked ? { scale: [1, 1.2, 1] } : { scale: 1 }}
-        transition={{ duration: 0.3 }}
+    <div className="relative pointer-events-none">
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log("Like button clicked!");
+          handleLike();
+        }}
+        disabled={isLoading || auth.loading || !auth.user}
+        className={`relative p-2 rounded-full transition-colors flex items-center gap-1 ${
+          isLiked ? 'text-red-500 bg-red-500/10' : 'text-gray-400 hover:text-red-500 hover:bg-red-500/10'
+        } cursor-pointer z-10 pointer-events-auto`}
+        aria-label={isLiked ? 'Unlike post' : 'Like post'}
+        type="button"
       >
-        <FiHeart
-          className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`}
-        />
-      </motion.div>
-      <span className="text-sm">{likeCount}</span>
-    </button>
+        <AnimatePresence>
+          {isLoading && (
+            <motion.div
+              className="absolute inset-0 rounded-full bg-red-500/20"
+              initial={{ scale: 0.5, opacity: 1 }}
+              animate={{ scale: 1.5, opacity: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+            />
+          )}
+        </AnimatePresence>
+        
+        <motion.div
+          animate={isLiked ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <FiHeart
+            className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`}
+          />
+        </motion.div>
+        <span className="text-sm">{likeCount}</span>
+      </button>
+    </div>
   );
 } 
