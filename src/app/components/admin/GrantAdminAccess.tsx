@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import { account } from '@/lib/appwrite';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth/AuthProvider';
 
 export function GrantAdminAccess() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const { user, refetchUser } = useAuth();
+  const { user, refreshUser } = useAuth();
 
   const handleGrantAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,10 +31,8 @@ export function GrantAdminAccess() {
       
       setMessage(`Admin privileges granted to yourself! Preferences updated: ${JSON.stringify(updatedPrefs)}`);
       
-      // Refetch user data
-      if (refetchUser) {
-        await refetchUser();
-      }
+      // Refresh user data
+      await refreshUser();
     } catch (error: any) {
       setMessage(`Error: ${error.message}`);
     } finally {

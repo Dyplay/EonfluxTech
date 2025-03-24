@@ -3,11 +3,11 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   transpilePackages: ['three'],
-  // Disable TypeScript checking during build
+  // TypeScript checking during build - disabled for now
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Disable ESLint during build
+  // ESLint during build
   eslint: {
     ignoreDuringBuilds: true,
   },

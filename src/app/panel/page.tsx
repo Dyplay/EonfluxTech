@@ -1,300 +1,399 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { FiUsers, FiHardDrive, FiActivity, FiDownload } from 'react-icons/fi';
+import AdminGuard from '../components/AdminGuard';
+import AdminNav from '../components/admin/AdminNav';
+import StatCard from '../components/admin/StatCard';
+import ChartCard from '../components/admin/ChartCard';
+import UserProfileCard from '../components/admin/UserProfileCard';
 import { 
-  FiActivity, 
-  FiUsers, 
-  FiFileText, 
-  FiRefreshCw, 
-  FiArrowUp, 
-  FiArrowDown, 
-  FiDatabase, 
-  FiEye, 
-  FiClock, 
-  FiHardDrive, 
-  FiWifi
-} from 'react-icons/fi';
-import { useAuth } from '@/lib/auth/AuthProvider';
+  getAppwriteStats, 
+  getUserCount, 
+  getGumroadConnectionsCount, 
+  getCurrentUserProfile,
+  AppwriteStats, 
+  UserProfile 
+} from '@/lib/admin';
+import { ChartOptions } from 'chart.js';
 
-interface UsageStats {
-  totalRequests: number;
-  realtimeConnections: number;
-  documentsCount: number;
-  storageSize: string;
-  bandwidthUsed: string;
-  executionTime: string;
-  trend: 'up' | 'down' | 'stable';
-  percentage: number;
-}
+// Define consistent colors for charts
+const chartColors = {
+  blue: {
+    border: 'rgb(14, 165, 233)',
+    background: 'rgba(14, 165, 233, 0.5)',
+  },
+  purple: {
+    border: 'rgb(99, 102, 241)',
+    background: 'rgba(99, 102, 241, 0.5)',
+    light: 'rgba(99, 102, 241, 0.2)',
+    hover: 'rgba(99, 102, 241, 0.8)',
+  },
+  green: {
+    border: 'rgb(34, 197, 94)',
+    background: 'rgba(34, 197, 94, 0.5)',
+  }
+};
 
-// StatCard component for displaying statistics
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-  trend,
-  percentage,
-  color = 'blue',
-}: {
-  title: string;
-  value: string | number;
-  icon: React.ElementType;
-  trend?: 'up' | 'down' | 'stable';
-  percentage?: number;
-  color?: 'blue' | 'green' | 'yellow' | 'red' | 'purple';
-}) {
-  // Define color classes based on the color prop
-  const colorClasses = {
-    blue: {
-      icon: 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400',
-      trend: {
-        up: 'text-green-600 dark:text-green-400',
-        down: 'text-red-600 dark:text-red-400',
-        stable: 'text-gray-600 dark:text-gray-400',
+// Define consistent chart options
+const chartOptions: ChartOptions<'line' | 'bar'> = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'top',
+      labels: {
+        boxWidth: 12,
+        usePointStyle: true,
+        pointStyle: 'circle',
+        color: 'rgb(99, 102, 241)',
+        font: {
+          weight: 'bold',
+        },
       },
-      border: 'border-blue-200 dark:border-blue-800/30'
     },
-    green: {
-      icon: 'bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400',
-      trend: {
-        up: 'text-green-600 dark:text-green-400',
-        down: 'text-red-600 dark:text-red-400',
-        stable: 'text-gray-600 dark:text-gray-400',
+    tooltip: {
+      backgroundColor: 'rgba(99, 102, 241, 0.8)',
+      titleColor: '#fff',
+      bodyColor: '#fff',
+      padding: 10,
+      cornerRadius: 6,
+      boxPadding: 4,
+      usePointStyle: true,
+      titleFont: {
+        weight: 'bold',
       },
-      border: 'border-green-200 dark:border-green-800/30'
     },
-    yellow: {
-      icon: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-600 dark:text-yellow-400',
-      trend: {
-        up: 'text-green-600 dark:text-green-400',
-        down: 'text-red-600 dark:text-red-400',
-        stable: 'text-gray-600 dark:text-gray-400',
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      grid: {
+        color: 'rgba(99, 102, 241, 0.1)',
       },
-      border: 'border-yellow-200 dark:border-yellow-800/30'
-    },
-    red: {
-      icon: 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400',
-      trend: {
-        up: 'text-green-600 dark:text-green-400',
-        down: 'text-red-600 dark:text-red-400',
-        stable: 'text-gray-600 dark:text-gray-400',
+      ticks: {
+        precision: 0,
+        color: 'rgba(99, 102, 241, 0.8)',
+        font: {
+          weight: 'bold',
+        },
       },
-      border: 'border-red-200 dark:border-red-800/30'
-    },
-    purple: {
-      icon: 'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400',
-      trend: {
-        up: 'text-green-600 dark:text-green-400',
-        down: 'text-red-600 dark:text-red-400',
-        stable: 'text-gray-600 dark:text-gray-400',
+      border: {
+        color: 'rgba(99, 102, 241, 0.2)',
       },
-      border: 'border-purple-200 dark:border-purple-800/30'
     },
-  };
+    x: {
+      grid: {
+        display: false,
+      },
+      ticks: {
+        color: 'rgba(99, 102, 241, 0.8)',
+        font: {
+          weight: 'bold',
+        },
+      },
+      border: {
+        color: 'rgba(99, 102, 241, 0.2)',
+      },
+    },
+  },
+  elements: {
+    line: {
+      borderWidth: 2,
+      tension: 0.4,
+    },
+    point: {
+      radius: 4,
+      hoverRadius: 6,
+      backgroundColor: 'white',
+      borderWidth: 2,
+    },
+    bar: {
+      borderWidth: 1,
+      borderRadius: 4,
+    },
+  },
+  interaction: {
+    mode: 'index',
+    intersect: false,
+  },
+};
 
-  return (
-    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-md border ${colorClasses[color].border} overflow-hidden p-6 transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1`}>
-      <div className="flex items-center">
-        <div className={`p-3 rounded-full ${colorClasses[color].icon} mr-5`}>
-          <Icon className="h-6 w-6" />
-        </div>
-        <div>
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-          {trend && percentage && (
-            <div className="flex items-center mt-2">
-              {trend === 'up' ? (
-                <FiArrowUp className={`mr-1 ${colorClasses[color].trend.up}`} />
-              ) : trend === 'down' ? (
-                <FiArrowDown className={`mr-1 ${colorClasses[color].trend.down}`} />
-              ) : (
-                <span className={`mr-1 ${colorClasses[color].trend.stable}`}>●</span>
-              )}
-              <span 
-                className={`text-xs font-medium ${
-                  trend === 'up' 
-                    ? colorClasses[color].trend.up
-                    : trend === 'down' 
-                      ? colorClasses[color].trend.down 
-                      : colorClasses[color].trend.stable
-                }`}
-              >
-                {percentage}% {trend === 'up' ? 'increase' : trend === 'down' ? 'decrease' : 'no change'}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function PanelDashboard() {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState({
-    totalUsers: 2487,
-    gumroadUsers: 842,
-    totalPosts: 156,
-    totalViews: 245689,
-  });
-  
-  const [appwriteUsage, setAppwriteUsage] = useState<UsageStats>({
-    totalRequests: 1248356,
-    realtimeConnections: 345,
-    documentsCount: 2856,
-    storageSize: '1.2 GB',
-    bandwidthUsed: '15.4 GB',
-    executionTime: '326 ms',
-    trend: 'up',
-    percentage: 12,
-  });
-
-  const refreshData = () => {
-    setLoading(true);
-    setTimeout(() => {
-      // Simulate refreshing data
-      setStats({
-        totalUsers: Math.floor(2400 + Math.random() * 200),
-        gumroadUsers: Math.floor(800 + Math.random() * 100),
-        totalPosts: Math.floor(150 + Math.random() * 20),
-        totalViews: Math.floor(245000 + Math.random() * 1000),
-      });
-      
-      setAppwriteUsage({
-        totalRequests: Math.floor(1240000 + Math.random() * 20000),
-        realtimeConnections: Math.floor(340 + Math.random() * 20),
-        documentsCount: Math.floor(2800 + Math.random() * 100),
-        storageSize: '1.2 GB',
-        bandwidthUsed: '15.4 GB',
-        executionTime: `${320 + Math.floor(Math.random() * 20)} ms`,
-        trend: 'up',
-        percentage: Math.floor(10 + Math.random() * 5),
-      });
-      
-      setLoading(false);
-    }, 1000);
-  };
+export default function AdminDashboard() {
+  const [stats, setStats] = useState<AppwriteStats | null>(null);
+  const [userCount, setUserCount] = useState<number>(0);
+  const [gumroadConnections, setGumroadConnections] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [usingRealData, setUsingRealData] = useState<boolean | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
-    // Initial data fetch 
-    refreshData();
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch all stats from a single API call
+        console.log('Fetching stats data...');
+        const statsData = await getAppwriteStats();
+        
+        // Check if we're using real data by looking at a property that would only be set by the API
+        // The mock data will have a fixed user count of 25
+        setUsingRealData(statsData.users.total !== 25);
+        
+        setStats(statsData);
+        setUserCount(statsData.users.total);
+        setGumroadConnections(statsData.gumroadConnections || 0);
+        console.log('Stats data loaded successfully');
+      } catch (err: any) {
+        console.error('Error fetching admin data:', err);
+        setError(err.message || 'Failed to load dashboard data');
+        setUsingRealData(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchUserProfile = async () => {
+      try {
+        setProfileLoading(true);
+        const profile = await getCurrentUserProfile();
+        setUserProfile(profile);
+      } catch (err) {
+        console.error('Error fetching user profile:', err);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchData();
+    fetchUserProfile();
   }, []);
 
+  // Format numbers with commas
+  const formatNumber = (num: number) => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
+  // Format bytes to human-readable format
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Prepare chart data
+  const getBandwidthChartData = () => {
+    if (!stats) return null;
+    
+    return {
+      labels: stats.bandwidth.labels,
+      datasets: [
+        {
+          label: 'Bandwidth Usage (MB)',
+          data: stats.bandwidth.usage,
+          borderColor: chartColors.purple.border,
+          backgroundColor: chartColors.purple.background,
+          hoverBackgroundColor: chartColors.purple.hover,
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    };
+  };
+
+  const getStorageChartData = () => {
+    if (!stats) return null;
+    
+    return {
+      labels: stats.storage.labels,
+      datasets: [
+        {
+          label: 'Storage Usage (MB)',
+          data: stats.storage.usage,
+          borderColor: chartColors.purple.border,
+          backgroundColor: chartColors.purple.background,
+          hoverBackgroundColor: chartColors.purple.hover,
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    };
+  };
+
+  const getRequestsChartData = () => {
+    if (!stats) return null;
+    
+    return {
+      labels: stats.requests.labels,
+      datasets: [
+        {
+          label: 'API Requests',
+          data: stats.requests.usage,
+          backgroundColor: chartColors.purple.background,
+          borderColor: chartColors.purple.border,
+          hoverBackgroundColor: chartColors.purple.hover,
+          borderWidth: 1,
+          borderRadius: 4,
+        },
+      ],
+    };
+  };
+
+  const getUsersChartData = () => {
+    if (!stats) return null;
+    
+    return {
+      labels: stats.users.labels,
+      datasets: [
+        {
+          label: 'User Growth',
+          data: stats.users.growth,
+          borderColor: chartColors.purple.border,
+          backgroundColor: chartColors.purple.background,
+          hoverBackgroundColor: chartColors.purple.hover,
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    };
+  };
+
   return (
-    <div className="py-6 px-4 sm:px-6 lg:px-8">
-      <div className="sm:flex sm:items-center mb-8">
-        <div className="sm:flex-auto">
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Dashboard</h1>
-          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-            Overview of your application's usage and statistics.
-          </p>
-        </div>
-        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-          <button
-            onClick={refreshData}
-            disabled={loading}
-            className="inline-flex items-center justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto disabled:opacity-50 transition-all duration-200"
+    <>
+      <div className="container max-w-7xl py-8">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex justify-between items-center"
+        >
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+            <p className="text-muted-foreground mb-8">
+              Monitor your Appwrite project statistics and user data
+            </p>
+          </div>
+          
+          {!loading && usingRealData !== null && (
+            <div className={`px-4 py-2 rounded-full text-sm font-medium ${
+              usingRealData 
+                ? 'bg-green-500/10 text-green-500' 
+                : 'bg-amber-500/10 text-amber-500'
+            }`}>
+              {usingRealData ? 'Using real data' : 'Using mock data'}
+            </div>
+          )}
+        </motion.div>
+
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-destructive/10 text-destructive rounded-md"
           >
-            <FiRefreshCw className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh Data
-          </button>
-        </div>
-      </div>
+            <p>{error}</p>
+            <p className="text-sm mt-2">
+              Some data may be displayed from fallback values.
+            </p>
+          </motion.div>
+        )}
 
-      {/* General stats */}
-      <div className="mb-10">
-        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-5">General Statistics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            title="Registered Users"
-            value={stats.totalUsers.toLocaleString()}
-            icon={FiUsers}
-            trend="up"
-            percentage={12}
-            color="blue"
-          />
-          <StatCard
-            title="Gumroad Connected Users"
-            value={stats.gumroadUsers.toLocaleString()}
-            icon={FiUsers}
-            trend="up"
-            percentage={8}
-            color="green"
-          />
-          <StatCard
-            title="Blog Posts"
-            value={stats.totalPosts.toLocaleString()}
-            icon={FiFileText}
-            trend="up"
-            percentage={5}
-            color="yellow"
-          />
-          <StatCard
-            title="Total Views"
-            value={stats.totalViews.toLocaleString()}
-            icon={FiEye}
-            trend="up"
-            percentage={15}
-            color="purple"
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2">
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <StatCard
+                title="Total Users"
+                value={loading ? '...' : formatNumber(userCount)}
+                icon={<FiUsers className="h-6 w-6 text-purple-500" />}
+                description="Registered accounts"
+                color="primary"
+              />
+              <StatCard
+                title="Gumroad Connections"
+                value={loading ? '...' : formatNumber(gumroadConnections)}
+                icon={<FiActivity className="h-6 w-6 text-purple-500" />}
+                description="Connected Gumroad accounts"
+                color="primary"
+              />
+              <StatCard
+                title="Storage Used"
+                value={loading ? '...' : `${formatNumber(stats?.storage.total || 0)} MB`}
+                icon={<FiHardDrive className="h-6 w-6 text-purple-500" />}
+                description="Total storage consumption"
+                color="primary"
+              />
+              <StatCard
+                title="Bandwidth Used"
+                value={loading ? '...' : `${formatNumber(stats?.bandwidth.total || 0)} MB`}
+                icon={<FiDownload className="h-6 w-6 text-purple-500" />}
+                description="Total bandwidth consumption"
+                color="primary"
+              />
+            </div>
+          </div>
+          
+          <div className="lg:col-span-1">
+            {/* User Profile */}
+            <UserProfileCard 
+              userProfile={userProfile} 
+              loading={profileLoading} 
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Appwrite usage stats */}
-      <div>
-        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-5">Appwrite Usage Statistics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <StatCard
-            title="Total API Requests"
-            value={appwriteUsage.totalRequests.toLocaleString()}
-            icon={FiActivity}
-            trend="up"
-            percentage={appwriteUsage.percentage}
-            color="blue"
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <ChartCard
+            title="Bandwidth Usage"
+            description="Daily bandwidth consumption in MB"
+            chartType="line"
+            data={getBandwidthChartData() || { labels: [], datasets: [] }}
+            loading={loading}
+            options={chartOptions}
+            className="border-purple-200 hover:shadow-md hover:shadow-purple-100 transition-shadow"
           />
-          <StatCard
-            title="Realtime Connections"
-            value={appwriteUsage.realtimeConnections}
-            icon={FiWifi}
-            trend="stable"
-            percentage={2}
-            color="green"
+          <ChartCard
+            title="API Requests"
+            description="Daily API request count"
+            chartType="bar"
+            data={getRequestsChartData() || { labels: [], datasets: [] }}
+            loading={loading}
+            options={chartOptions}
+            className="border-purple-200 hover:shadow-md hover:shadow-purple-100 transition-shadow"
           />
-          <StatCard
-            title="Documents Count"
-            value={appwriteUsage.documentsCount.toLocaleString()}
-            icon={FiDatabase}
-            trend="up"
-            percentage={8}
-            color="purple"
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ChartCard
+            title="Storage Usage"
+            description="Daily storage consumption in MB"
+            chartType="line"
+            data={getStorageChartData() || { labels: [], datasets: [] }}
+            loading={loading}
+            options={chartOptions}
+            className="border-purple-200 hover:shadow-md hover:shadow-purple-100 transition-shadow"
           />
-          <StatCard
-            title="Storage Size"
-            value={appwriteUsage.storageSize}
-            icon={FiHardDrive}
-            trend="up"
-            percentage={6}
-            color="yellow"
-          />
-          <StatCard
-            title="Bandwidth Used"
-            value={appwriteUsage.bandwidthUsed}
-            icon={FiActivity}
-            trend="up"
-            percentage={9}
-            color="red"
-          />
-          <StatCard
-            title="Avg. Execution Time"
-            value={appwriteUsage.executionTime}
-            icon={FiClock}
-            trend="down"
-            percentage={3}
-            color="green"
+          <ChartCard
+            title="User Growth"
+            description="Daily new user registrations"
+            chartType="line"
+            data={getUsersChartData() || { labels: [], datasets: [] }}
+            loading={loading}
+            options={chartOptions}
+            className="border-purple-200 hover:shadow-md hover:shadow-purple-100 transition-shadow"
           />
         </div>
       </div>
-    </div>
+    </>
   );
 } 

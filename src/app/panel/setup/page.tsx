@@ -145,7 +145,6 @@ export default function SetupPage() {
 
   return (
     <AdminGuard>
-      <AdminNav />
       
       <div className="container max-w-4xl py-8">
         <div className="flex items-center mb-8">

@@ -36,7 +36,6 @@ export default function KeyTestPage() {
 
   return (
     <div>
-      <AdminNav />
       <div className="container max-w-4xl py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}

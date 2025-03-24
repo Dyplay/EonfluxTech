@@ -3,9 +3,17 @@
 import { useEffect, useState } from 'react';
 import { account } from '@/lib/appwrite';
 import { isUserAdmin, getCurrentUser } from '@/lib/auth';
+import { Models } from 'appwrite';
+
+interface DebugInfo {
+  method1?: Models.User<Models.Preferences>;
+  method1Error?: string;
+  method2?: any;
+  method2Error?: string | null;
+}
 
 export default function AdminDebugPage() {
-  const [userInfo, setUserInfo] = useState<any>(null);
+  const [userInfo, setUserInfo] = useState<DebugInfo>({});
   const [adminStatus, setAdminStatus] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

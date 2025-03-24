@@ -8,13 +8,13 @@ export default function AdminNav() {
   const pathname = usePathname();
   
   const navItems = [
-    { href: '/admin', label: 'Dashboard', icon: <FiHome className="mr-2" /> },
-    { href: '/admin/users', label: 'Users', icon: <FiUsers className="mr-2" /> },
-    { href: '/admin/blog/manage', label: 'Blog', icon: <FiEdit3 className="mr-2" /> },
-    { href: '/admin/setup', label: 'Setup', icon: <FiSettings className="mr-2" /> },
-    { href: '/admin/key-test', label: 'API Key Test', icon: <FiKey className="mr-2" /> },
-    { href: '/admin/test', label: 'Appwrite Test', icon: <FiDatabase className="mr-2" /> },
-    { href: '/admin/env-test', label: 'Env Variables', icon: <FiSettings className="mr-2" /> },
+    { href: '/panel', label: 'Dashboard', icon: <FiHome className="mr-2" /> },
+    { href: '/panel/users', label: 'Users', icon: <FiUsers className="mr-2" /> },
+    { href: '/panel/blog/manage', label: 'Blog', icon: <FiEdit3 className="mr-2" /> },
+    { href: '/panel/setup', label: 'Setup', icon: <FiSettings className="mr-2" /> },
+    { href: '/panel/key-test', label: 'API Key Test', icon: <FiKey className="mr-2" /> },
+    { href: '/panel/test', label: 'Appwrite Test', icon: <FiDatabase className="mr-2" /> },
+    { href: '/panel/env-test', label: 'Env Variables', icon: <FiSettings className="mr-2" /> },
   ];
   
   return (
