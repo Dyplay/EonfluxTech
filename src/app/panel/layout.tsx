@@ -76,7 +76,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
 
   return (
     <AdminGuard>
-      <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 ${theme === 'dark' ? 'dark' : ''}`}>
+      <div className={`min-h-screen bg-gray-50 dark:bg-[rgb(16,8,24)] ${theme === 'dark' ? 'dark' : ''}`}>
         <AdminNav />
 
         {/* Page Content */}
