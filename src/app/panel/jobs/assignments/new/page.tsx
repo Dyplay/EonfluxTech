@@ -83,21 +83,31 @@ export default function NewAssignmentPage() {
       }
 
       try {
-        const response = await databases.listDocuments(
-          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-          'users',
-          [
-            Query.search('name', searchTerm),
-            Query.search('email', searchTerm)
-          ]
+        // Get the list of users from the auth system
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/v1/users?search=${encodeURIComponent(searchTerm)}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Appwrite-Project': process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!,
+              'X-Appwrite-Key': process.env.NEXT_PUBLIC_APPWRITE_API_KEY!,
+            },
+          }
         );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch users');
+        }
+
+        const data = await response.json();
         
-        const filteredUsers = response.documents.map(doc => ({
-          $id: doc.$id,
-          name: doc.name || '',
-          email: doc.email || '',
-          avatar: doc.avatar
+        const filteredUsers = data.users.map((user: any) => ({
+          $id: user.$id,
+          name: user.name || '',
+          email: user.email || '',
+          avatar: user.prefs?.avatar || ''
         }));
+        
         setSearchResults(filteredUsers);
       } catch (error) {
         console.error('Error searching users:', error);
