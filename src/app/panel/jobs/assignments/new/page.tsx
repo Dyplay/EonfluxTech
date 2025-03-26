@@ -58,15 +58,65 @@ export default function NewAssignmentPage() {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
+        console.log('Fetching jobs...');
+        console.log('Database ID:', process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID);
         const response = await databases.listDocuments(
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
           'jobs',
-          [Query.equal('status', 'active')]
+          []
         );
-        setJobs(response.documents as unknown as Job[]);
+        console.log('Jobs response:', response);
+        console.log('Number of jobs:', response.documents.length);
+        
+        // If no jobs exist, create some test jobs
+        if (response.documents.length === 0) {
+          console.log('No jobs found, creating test jobs...');
+          const testJobs = [
+            {
+              title: 'Frontend Developer',
+              description: 'We are looking for a skilled frontend developer to join our team.',
+              requirements: 'React, TypeScript, Tailwind CSS',
+              deadline: '2024-12-31',
+              location: 'Remote',
+              type: 'Full-time'
+            },
+            {
+              title: 'Backend Developer',
+              description: 'Seeking an experienced backend developer for our growing team.',
+              requirements: 'Node.js, PostgreSQL, REST APIs',
+              deadline: '2024-12-31',
+              location: 'Hybrid',
+              type: 'Full-time'
+            }
+          ];
+
+          for (const job of testJobs) {
+            await databases.createDocument(
+              process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+              'jobs',
+              ID.unique(),
+              job
+            );
+          }
+
+          // Fetch jobs again after creating test data
+          const updatedResponse = await databases.listDocuments(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            'jobs',
+            []
+          );
+          setJobs(updatedResponse.documents as unknown as Job[]);
+        } else {
+          setJobs(response.documents as unknown as Job[]);
+        }
       } catch (error) {
         console.error('Error fetching jobs:', error);
-        toast.error('Failed to load jobs');
+        console.error('Error details:', {
+          message: (error as any).message,
+          code: (error as any).code,
+          type: (error as any).type
+        });
+        toast.error('Failed to load jobs. Please check if the jobs collection exists and you have proper permissions.');
       }
     };
 
@@ -212,7 +262,7 @@ export default function NewAssignmentPage() {
                         alt={user.name}
                         width={32}
                         height={32}
-                        className="rounded-full"
+                        className="rounded-full aspect-square object-cover"
                       />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -235,7 +285,7 @@ export default function NewAssignmentPage() {
                     alt={selectedUser.name}
                     width={40}
                     height={40}
-                    className="rounded-full"
+                    className="rounded-full aspect-square object-cover"
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
