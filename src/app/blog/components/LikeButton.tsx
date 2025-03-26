@@ -45,7 +45,7 @@ export function LikeButton({ postId, initialLikes }: LikeButtonProps) {
     }
   }, [user, postId]);
 
-  const handleLike = (e: React.MouseEvent) => {
+  const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -56,83 +56,71 @@ export function LikeButton({ postId, initialLikes }: LikeButtonProps) {
 
     setIsLoading(true);
     
-    if (isLiked) {
-      // Find and remove like
-      databases.listDocuments(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-        'post_likes',
-        [
-          Query.equal('userId', user.$id),
-          Query.equal('postId', postId)
-        ]
-      )
-      .then(response => {
+    try {
+      if (isLiked) {
+        // Find and remove like
+        const response = await databases.listDocuments(
+          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+          'post_likes',
+          [
+            Query.equal('userId', user.$id),
+            Query.equal('postId', postId)
+          ]
+        );
+        
         if (response.documents.length > 0) {
-          return databases.deleteDocument(
+          await databases.deleteDocument(
             process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
             'post_likes',
             response.documents[0].$id
           );
+          
+          const newCount = likeCount - 1;
+          setLikeCount(newCount);
+          
+          // Update post likes count
+          await databases.updateDocument(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            'blogs',
+            postId,
+            { likes: newCount }
+          );
+          
+          setIsLiked(false);
+          toast.success('Post unliked');
         }
-      })
-      .then(() => {
-        const newCount = likeCount - 1;
-        setLikeCount(newCount);
-        
-        // Update post likes count
-        return databases.updateDocument(
+      } else {
+        // Add like
+        await databases.createDocument(
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-          'blogs',
-          postId,
-          { likes: newCount }
+          'post_likes',
+          ID.unique(),
+          {
+            userId: user.$id,
+            postId,
+            likedAt: new Date().toISOString()
+          }
         );
-      })
-      .then(() => {
-        setIsLiked(false);
-        toast.success('Post unliked');
-      })
-      .catch(error => {
-        console.error('Error unliking post:', error);
-        toast.error('Failed to unlike post');
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-    } else {
-      // Add like
-      databases.createDocument(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-        'post_likes',
-        ID.unique(),
-        {
-          userId: user.$id,
-          postId,
-          likedAt: new Date().toISOString()
-        }
-      )
-      .then(() => {
+        
         const newCount = likeCount + 1;
         setLikeCount(newCount);
         
         // Update post likes count
-        return databases.updateDocument(
+        await databases.updateDocument(
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
           'blogs',
           postId,
           { likes: newCount }
         );
-      })
-      .then(() => {
+        
         setIsLiked(true);
         toast.success('Post liked');
-      })
-      .catch(error => {
-        console.error('Error liking post:', error);
-        toast.error('Failed to like post');
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      }
+    } catch (error) {
+      console.error('Error handling like:', error);
+      toast.error(isLiked ? 'Failed to unlike post' : 'Failed to like post');
+    } finally {
+      setIsLoading(false);
     }
   };
 

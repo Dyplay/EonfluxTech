@@ -47,7 +47,7 @@ export function SaveButton({ postId, postTitle, postSlug, postBannerImage, postE
     }
   }, [user, postId]);
 
-  const handleSave = (e: React.MouseEvent) => {
+  const handleSave = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -58,63 +58,51 @@ export function SaveButton({ postId, postTitle, postSlug, postBannerImage, postE
 
     setIsLoading(true);
     
-    if (isSaved) {
-      // Remove saved post
-      databases.listDocuments(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-        'saved_posts',
-        [
-          Query.equal('userId', user.$id),
-          Query.equal('postId', postId)
-        ]
-      )
-      .then(response => {
+    try {
+      if (isSaved) {
+        // Remove saved post
+        const response = await databases.listDocuments(
+          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+          'saved_posts',
+          [
+            Query.equal('userId', user.$id),
+            Query.equal('postId', postId)
+          ]
+        );
+        
         if (response.documents.length > 0) {
-          return databases.deleteDocument(
+          await databases.deleteDocument(
             process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
             'saved_posts',
             response.documents[0].$id
           );
+          setIsSaved(false);
+          toast.success('Post removed from saved');
         }
-      })
-      .then(() => {
-        setIsSaved(false);
-        toast.success('Post removed from saved');
-      })
-      .catch(error => {
-        console.error('Error removing saved post:', error);
-        toast.error('Failed to remove post from saved');
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-    } else {
-      // Save the post
-      databases.createDocument(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-        'saved_posts',
-        ID.unique(),
-        {
-          userId: user.$id,
-          postId,
-          postTitle,
-          postSlug,
-          postBannerImage,
-          postExcerpt,
-          savedAt: new Date().toISOString()
-        }
-      )
-      .then(() => {
+      } else {
+        // Save the post
+        await databases.createDocument(
+          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+          'saved_posts',
+          ID.unique(),
+          {
+            userId: user.$id,
+            postId,
+            postTitle,
+            postSlug,
+            postBannerImage,
+            postExcerpt,
+            savedAt: new Date().toISOString()
+          }
+        );
         setIsSaved(true);
         toast.success('Post saved successfully');
-      })
-      .catch(error => {
-        console.error('Error saving post:', error);
-        toast.error('Failed to save post');
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      }
+    } catch (error) {
+      console.error('Error handling save:', error);
+      toast.error(isSaved ? 'Failed to remove post from saved' : 'Failed to save post');
+    } finally {
+      setIsLoading(false);
     }
   };
 

@@ -107,9 +107,153 @@ export async function POST(request: Request) {
       );
       console.log('Blogs collection exists:', collection.name);
       
+      // Check if post_likes collection exists
+      try {
+        await databases.getCollection(databaseId, 'post_likes');
+        console.log('Post likes collection exists');
+      } catch (error: any) {
+        if (error.code === 404) {
+          console.log('Creating post_likes collection...');
+          const postLikesCollection = await databases.createCollection(
+            databaseId,
+            'post_likes',
+            'Post Likes',
+            [
+              Permission.read(Role.any()),
+              Permission.create(Role.users()),
+              Permission.update(Role.users()),
+              Permission.delete(Role.users())
+            ]
+          );
+
+          // Create attributes for post_likes
+          await databases.createStringAttribute(
+            databaseId,
+            postLikesCollection.$id,
+            'userId',
+            255,
+            true
+          );
+
+          await databases.createStringAttribute(
+            databaseId,
+            postLikesCollection.$id,
+            'postId',
+            255,
+            true
+          );
+
+          await databases.createStringAttribute(
+            databaseId,
+            postLikesCollection.$id,
+            'likedAt',
+            128,
+            true
+          );
+
+          // Create indexes
+          await databases.createIndex(
+            databaseId,
+            postLikesCollection.$id,
+            'user_post_index',
+            IndexType.Unique,
+            ['userId', 'postId'],
+            []
+          );
+        }
+      }
+
+      // Check if saved_posts collection exists
+      try {
+        await databases.getCollection(databaseId, 'saved_posts');
+        console.log('Saved posts collection exists');
+      } catch (error: any) {
+        if (error.code === 404) {
+          console.log('Creating saved_posts collection...');
+          const savedPostsCollection = await databases.createCollection(
+            databaseId,
+            'saved_posts',
+            'Saved Posts',
+            [
+              Permission.read(Role.users()),
+              Permission.create(Role.users()),
+              Permission.update(Role.users()),
+              Permission.delete(Role.users())
+            ]
+          );
+
+          // Create attributes for saved_posts
+          await databases.createStringAttribute(
+            databaseId,
+            savedPostsCollection.$id,
+            'userId',
+            255,
+            true
+          );
+
+          await databases.createStringAttribute(
+            databaseId,
+            savedPostsCollection.$id,
+            'postId',
+            255,
+            true
+          );
+
+          await databases.createStringAttribute(
+            databaseId,
+            savedPostsCollection.$id,
+            'postTitle',
+            255,
+            true
+          );
+
+          await databases.createStringAttribute(
+            databaseId,
+            savedPostsCollection.$id,
+            'postSlug',
+            255,
+            true
+          );
+
+          await databases.createStringAttribute(
+            databaseId,
+            savedPostsCollection.$id,
+            'postBannerImage',
+            512,
+            true
+          );
+
+          await databases.createStringAttribute(
+            databaseId,
+            savedPostsCollection.$id,
+            'postExcerpt',
+            500,
+            false
+          );
+
+          await databases.createStringAttribute(
+            databaseId,
+            savedPostsCollection.$id,
+            'savedAt',
+            128,
+            true
+          );
+
+          // Create indexes
+          await databases.createIndex(
+            databaseId,
+            savedPostsCollection.$id,
+            'user_post_index',
+            IndexType.Unique,
+            ['userId', 'postId'],
+            []
+          );
+        }
+      }
+      
       return NextResponse.json({ 
         success: true, 
-        message: 'Blogs collection already exists', 
+        message: 'All collections exist or were created successfully', 
         collection 
       });
     } catch (error: any) {

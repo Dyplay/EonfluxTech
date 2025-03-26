@@ -12,6 +12,9 @@ export interface GitHubRepo {
   homepage: string | null;
 }
 
+// List of repositories to exclude
+const BLACKLISTED_REPOS = ['.github'];
+
 export async function getGithubRepos(): Promise<GitHubRepo[]> {
   try {
     const response = await fetch('https://api.github.com/users/EonfluxTech-com/repos', {
@@ -26,7 +29,8 @@ export async function getGithubRepos(): Promise<GitHubRepo[]> {
     }
 
     const data = await response.json();
-    return data;
+    // Filter out blacklisted repositories
+    return data.filter((repo: GitHubRepo) => !BLACKLISTED_REPOS.includes(repo.name));
   } catch (error) {
     console.error('Error fetching GitHub repos:', error);
     return [];
