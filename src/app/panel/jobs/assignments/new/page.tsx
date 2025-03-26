@@ -7,7 +7,8 @@ import { ID, Query } from 'appwrite';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { FiUser, FiCalendar, FiBriefcase, FiSave } from 'react-icons/fi';
+import { FiUser, FiCalendar, FiBriefcase, FiSave, FiSearch } from 'react-icons/fi';
+import Image from 'next/image';
 
 interface Job {
   $id: string;
@@ -15,13 +16,15 @@ interface Job {
   description: string;
   requirements: string;
   deadline: string;
+  location: string;
+  type: string;
 }
 
-interface User {
+interface AppwriteUser {
   $id: string;
   name: string;
   email: string;
-  labels: string[];
+  avatar?: string;
 }
 
 export default function NewAssignmentPage() {
@@ -32,9 +35,9 @@ export default function NewAssignmentPage() {
   const [selectedJobId, setSelectedJobId] = useState('');
   const [deadline, setDeadline] = useState('');
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [searchResults, setSearchResults] = useState<AppwriteUser[]>([]);
+  const [selectedUser, setSelectedUser] = useState<AppwriteUser | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -57,42 +60,54 @@ export default function NewAssignmentPage() {
       try {
         const response = await databases.listDocuments(
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-          'jobs'
+          'jobs',
+          [Query.equal('status', 'active')]
         );
-        setJobs(response.documents as Job[]);
+        setJobs(response.documents as unknown as Job[]);
       } catch (error) {
         console.error('Error fetching jobs:', error);
         toast.error('Failed to load jobs');
       }
     };
 
-    const fetchUsers = async () => {
-      try {
-        const response = await databases.listDocuments(
-          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-          'users'
-        );
-        setUsers(response.documents as User[]);
-        setFilteredUsers(response.documents as User[]);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-        toast.error('Failed to load users');
-      }
-    };
-
     if (!authLoading && user) {
       fetchJobs();
-      fetchUsers();
     }
   }, [authLoading, user]);
 
   useEffect(() => {
-    const filtered = users.filter(user => 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredUsers(filtered);
-  }, [searchTerm, users]);
+    const searchUsers = async () => {
+      if (!searchTerm || searchTerm.length < 2) {
+        setSearchResults([]);
+        return;
+      }
+
+      try {
+        const response = await databases.listDocuments(
+          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+          'users',
+          [
+            Query.search('name', searchTerm),
+            Query.search('email', searchTerm)
+          ]
+        );
+        
+        const filteredUsers = response.documents.map(doc => ({
+          $id: doc.$id,
+          name: doc.name || '',
+          email: doc.email || '',
+          avatar: doc.avatar
+        }));
+        setSearchResults(filteredUsers);
+      } catch (error) {
+        console.error('Error searching users:', error);
+        toast.error('Failed to search users');
+      }
+    };
+
+    const debounceTimer = setTimeout(searchUsers, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,15 +120,11 @@ export default function NewAssignmentPage() {
       setIsSubmitting(true);
       toast.loading('Creating assignment...');
 
-      // Get the selected job and user
       const selectedJob = jobs.find(job => job.$id === selectedJobId);
-      const selectedUser = users.find(user => user.$id === selectedUserId);
-
       if (!selectedJob || !selectedUser) {
         throw new Error('Selected job or user not found');
       }
 
-      // Create custom panel document
       const panelData = {
         userId: selectedUserId,
         userName: selectedUser.name,
@@ -130,7 +141,7 @@ export default function NewAssignmentPage() {
         createdByName: user?.name
       };
 
-      const newPanel = await databases.createDocument(
+      await databases.createDocument(
         process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
         'custom_panels',
         ID.unique(),
@@ -166,29 +177,67 @@ export default function NewAssignmentPage() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search users..."
-                className="w-full px-4 py-3 bg-background border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition duration-150 ease-in-out"
+                placeholder="Search users by name or email..."
+                className="w-full px-4 py-3 bg-background border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition duration-150 ease-in-out pl-10"
               />
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary" />
             </div>
-            <div className="mt-2 max-h-60 overflow-y-auto border rounded-lg">
-              {filteredUsers.map((user) => (
-                <div
-                  key={user.$id}
-                  onClick={() => setSelectedUserId(user.$id)}
-                  className={`p-3 cursor-pointer hover:bg-accent transition-colors ${
-                    selectedUserId === user.$id ? 'bg-primary/10' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <FiUser className="w-5 h-5" />
+            {searchResults.length > 0 && (
+              <div className="mt-2 max-h-60 overflow-y-auto border rounded-lg bg-card">
+                {searchResults.map((user) => (
+                  <button
+                    key={user.$id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedUserId(user.$id);
+                      setSelectedUser(user);
+                      setSearchTerm('');
+                      setSearchResults([]);
+                    }}
+                    className="w-full p-3 text-left hover:bg-accent/50 transition-colors flex items-center gap-3"
+                  >
+                    {user.avatar ? (
+                      <Image
+                        src={user.avatar}
+                        alt={user.name}
+                        width={32}
+                        height={32}
+                        className="rounded-full"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <FiUser className="w-4 h-4 text-primary" />
+                      </div>
+                    )}
                     <div>
-                      <p className="font-medium">{user.name}</p>
+                      <p className="font-medium text-foreground">{user.name}</p>
                       <p className="text-sm text-secondary">{user.email}</p>
                     </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {selectedUser && (
+              <div className="mt-2 p-3 bg-accent/50 rounded-lg flex items-center gap-3">
+                {selectedUser.avatar ? (
+                  <Image
+                    src={selectedUser.avatar}
+                    alt={selectedUser.name}
+                    width={40}
+                    height={40}
+                    className="rounded-full"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <FiUser className="w-5 h-5 text-primary" />
                   </div>
+                )}
+                <div>
+                  <p className="font-medium text-foreground">{selectedUser.name}</p>
+                  <p className="text-sm text-secondary">{selectedUser.email}</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
 
           <div>
@@ -197,21 +246,29 @@ export default function NewAssignmentPage() {
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {jobs.map((job) => (
-                <div
+                <button
                   key={job.$id}
+                  type="button"
                   onClick={() => setSelectedJobId(job.$id)}
-                  className={`p-4 border rounded-lg cursor-pointer hover:bg-accent transition-colors ${
+                  className={`p-4 border rounded-lg text-left hover:bg-accent/50 transition-colors ${
                     selectedJobId === job.$id ? 'border-primary bg-primary/5' : ''
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <FiBriefcase className="w-5 h-5" />
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <FiBriefcase className="w-5 h-5 text-primary" />
+                    </div>
                     <div>
-                      <p className="font-medium">{job.title}</p>
-                      <p className="text-sm text-secondary line-clamp-2">{job.description}</p>
+                      <p className="font-medium text-foreground">{job.title}</p>
+                      <p className="text-sm text-secondary line-clamp-2 mt-1">{job.description}</p>
+                      <div className="flex items-center gap-2 mt-2 text-sm text-secondary">
+                        <span>{job.location}</span>
+                        <span>•</span>
+                        <span>{job.type}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
