@@ -85,7 +85,7 @@ export default function NewAssignmentPage() {
       try {
         // Get the list of users from the auth system
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/v1/users?search=${encodeURIComponent(searchTerm)}`,
+          `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/users?search=${encodeURIComponent(searchTerm)}`,
           {
             headers: {
               'Content-Type': 'application/json',
