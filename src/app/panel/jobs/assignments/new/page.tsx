@@ -38,38 +38,53 @@ export default function NewAssignmentPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<AppwriteUser[]>([]);
   const [selectedUser, setSelectedUser] = useState<AppwriteUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log('Component mounted');
+    console.log('Auth state:', { authLoading, user });
+
     if (!authLoading && !user) {
+      console.log('No user, redirecting to login');
       router.push('/login');
       return;
     }
 
     if (user && !authLoading) {
+      console.log('User authenticated:', user);
       const userRole = user.prefs?.role || 'user';
       if (userRole !== 'admin') {
+        console.log('User not admin, redirecting');
         toast.error('You do not have permission to create assignments');
         router.push('/');
         return;
       }
+      setIsLoading(false);
     }
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    const fetchJobs = async () => {
+    if (isLoading) {
+      console.log('Still loading, waiting for auth...');
+      return;
+    }
+
+    console.log('Jobs useEffect triggered');
+    console.log('Auth state in jobs effect:', { authLoading, user });
+
+    const setupJobs = async () => {
       try {
-        console.log('Fetching jobs...');
-        console.log('Database ID:', process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID);
-        const response = await databases.listDocuments(
-          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-          'jobs',
-          []
-        );
-        console.log('Jobs response:', response);
-        console.log('Number of jobs:', response.documents.length);
+        console.log('Setting up jobs...');
         
-        // If no jobs exist, create some test jobs
-        if (response.documents.length === 0) {
+        // Try to fetch existing jobs
+        const response = await databases.listDocuments(
+          '67d3fa9b00025dff9050',
+          'jobs'
+        );
+        
+        console.log('Raw jobs response:', response);
+        
+        if (!response.documents || response.documents.length === 0) {
           console.log('No jobs found, creating test jobs...');
           const testJobs = [
             {
@@ -78,7 +93,8 @@ export default function NewAssignmentPage() {
               requirements: 'React, TypeScript, Tailwind CSS',
               deadline: '2024-12-31',
               location: 'Remote',
-              type: 'Full-time'
+              type: 'Full-time',
+              status: 'active'
             },
             {
               title: 'Backend Developer',
@@ -86,44 +102,63 @@ export default function NewAssignmentPage() {
               requirements: 'Node.js, PostgreSQL, REST APIs',
               deadline: '2024-12-31',
               location: 'Hybrid',
-              type: 'Full-time'
+              type: 'Full-time',
+              status: 'active'
             }
           ];
 
           for (const job of testJobs) {
-            await databases.createDocument(
-              process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-              'jobs',
-              ID.unique(),
-              job
-            );
+            try {
+              console.log('Creating job:', job);
+              const result = await databases.createDocument(
+                '67d3fa9b00025dff9050',
+                'jobs',
+                ID.unique(),
+                job
+              );
+              console.log('Created job result:', result);
+            } catch (error) {
+              console.error('Error creating job:', error);
+              console.error('Error details:', {
+                message: (error as any).message,
+                code: (error as any).code,
+                type: (error as any).type,
+                response: (error as any).response
+              });
+              throw error;
+            }
           }
 
           // Fetch jobs again after creating test data
           const updatedResponse = await databases.listDocuments(
-            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-            'jobs',
-            []
+            '67d3fa9b00025dff9050',
+            'jobs'
           );
+          console.log('Updated jobs response:', updatedResponse);
           setJobs(updatedResponse.documents as unknown as Job[]);
         } else {
+          console.log('Found existing jobs:', response.documents);
           setJobs(response.documents as unknown as Job[]);
         }
       } catch (error) {
-        console.error('Error fetching jobs:', error);
+        console.error('Error setting up jobs:', error);
         console.error('Error details:', {
           message: (error as any).message,
           code: (error as any).code,
-          type: (error as any).type
+          type: (error as any).type,
+          response: (error as any).response
         });
-        toast.error('Failed to load jobs. Please check if the jobs collection exists and you have proper permissions.');
+        toast.error('Failed to set up jobs. Please check your database permissions.');
       }
     };
 
     if (!authLoading && user) {
-      fetchJobs();
+      console.log('User authenticated, setting up jobs...');
+      setupJobs();
+    } else {
+      console.log('Waiting for auth...');
     }
-  }, [authLoading, user]);
+  }, [authLoading, user, isLoading]);
 
   useEffect(() => {
     const searchUsers = async () => {
@@ -218,6 +253,14 @@ export default function NewAssignmentPage() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -304,33 +347,39 @@ export default function NewAssignmentPage() {
             <label className="block text-sm font-medium text-foreground mb-2">
               Select Job <span className="text-red-500">*</span>
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {jobs.map((job) => (
-                <button
-                  key={job.$id}
-                  type="button"
-                  onClick={() => setSelectedJobId(job.$id)}
-                  className={`p-4 border rounded-lg text-left hover:bg-accent/50 transition-colors ${
-                    selectedJobId === job.$id ? 'border-primary bg-primary/5' : ''
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <FiBriefcase className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">{job.title}</p>
-                      <p className="text-sm text-secondary line-clamp-2 mt-1">{job.description}</p>
-                      <div className="flex items-center gap-2 mt-2 text-sm text-secondary">
-                        <span>{job.location}</span>
-                        <span>•</span>
-                        <span>{job.type}</span>
+            {jobs.length === 0 ? (
+              <div className="p-4 border rounded-lg text-center text-secondary">
+                No jobs available. Please create some jobs first.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {jobs.map((job) => (
+                  <button
+                    key={job.$id}
+                    type="button"
+                    onClick={() => setSelectedJobId(job.$id)}
+                    className={`p-4 border rounded-lg text-left hover:bg-accent/50 transition-colors ${
+                      selectedJobId === job.$id ? 'border-primary bg-primary/5' : ''
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <FiBriefcase className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">{job.title}</p>
+                        <p className="text-sm text-secondary line-clamp-2 mt-1">{job.description}</p>
+                        <div className="flex items-center gap-2 mt-2 text-sm text-secondary">
+                          <span>{job.location}</span>
+                          <span>•</span>
+                          <span>{job.type}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </button>
-              ))}
-            </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>

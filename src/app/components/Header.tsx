@@ -72,6 +72,7 @@ export default function Header() {
     { href: '/shop', label: 'Shop' },
     { href: '/about', label: 'About' },
     { href: '/blog', label: 'Blog' },
+    { href: '/career', label: 'Careers' },
     { href: 'https://github.com/EonfluxTech-com', label: 'GitHub' }
   ];
 

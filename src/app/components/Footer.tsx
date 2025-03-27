@@ -80,6 +80,7 @@ export default function Footer() {
               <li><Link href="/about" className="text-secondary hover:text-foreground">{t('common.about')}</Link></li>
               <li><Link href="/blog" className="text-secondary hover:text-foreground">Blog</Link></li>
               <li><Link href="/contact" className="text-secondary hover:text-foreground">{t('common.contact')}</Link></li>
+              <li><Link href="/career" className="text-secondary hover:text-foreground">Careers</Link></li>
             </ul>
           </div>
           <div>
