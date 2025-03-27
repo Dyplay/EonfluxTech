@@ -20,6 +20,15 @@ const fadeIn = {
   })
 };
 
+// Add country code mapping
+const countryCodes: { [key: string]: string } = {
+  "Austria": "AT",
+  "United States": "US",
+  "Armenia": "AM",
+  "Germany": "DE",
+  "Hungary": "HU"
+};
+
 export default function AboutPage() {
   const [activeTab, setActiveTab] = useState<'mission' | 'values' | 'team'>('mission');
   
@@ -28,6 +37,7 @@ export default function AboutPage() {
     {
       name: "Marco Rivero Alvarez",
       role: "Founder & Lead Developer",
+      country: "Austria",
       image: "/team/dyplay_0e39c814ab49bf772c9f099a921d623d.jpg",
       bio: "Loves Programming Website with Next.js and Tailwind CSS and loves to learn new things.",
       links: {
@@ -39,6 +49,7 @@ export default function AboutPage() {
     {
       name: "Lauren Derrick",
       role: "Developer",
+      country: "United States",
       image: "/team/Fqll3n_ang3l_jinx-goggles.gif",
       bio: "Major fan of Jinx from arcane, And loves coding!",
       links: {
@@ -48,6 +59,7 @@ export default function AboutPage() {
     {
       name: "Manu Shahverdyan",
       role: "Digital Artist & Developer",
+      country: "Austria",
       image: "/team/manu.jpg",
       bio: "An artist working in both traditional and digital mediums also has a passion for programming.",
       links: {
@@ -57,6 +69,7 @@ export default function AboutPage() {
     {
       name: "Stefan Zax",
       role: "Linux System Administrator & DevOps Engineer",
+      country: "Austria",
       image: "/team/stefan.png",
       bio: "No bio set.",
       links: {
@@ -66,6 +79,7 @@ export default function AboutPage() {
     {
       name: "Patrick Haipl",
       role: "Hardware Technician",
+      country: "Austria",
       image: "/team/patrick.png",
       bio: "No bio set.",
       links: {
@@ -76,6 +90,7 @@ export default function AboutPage() {
     {
       name: "Gergő Marosán",
       role: "Fullstack - Developer",
+      country: "Hungary",
       image: "/team/geri.png",
       bio: "No bio set.",
       links: {
@@ -86,6 +101,7 @@ export default function AboutPage() {
     {
       name: "Mirkó Peresztegi",
       role: "Backend - Web Developer",
+      country: "Hungary",
       image: "/team/868k0Oi.jpg",
       bio: "Discord bot Developer, Web Developer, Youtuber",
       links: {
@@ -377,7 +393,18 @@ export default function AboutPage() {
                     <div className="p-6 flex flex-col h-[calc(100%-16rem)]">
                       <div className="flex-grow">
                         <h4 className="text-xl font-semibold mb-1">{member.name}</h4>
-                        <p className="text-primary text-sm mb-3">{member.role}</p>
+                        <div className="flex items-center gap-2 mb-3">
+                          <p className="text-primary text-sm">{member.role}</p>
+                          <span className="text-muted-foreground text-sm">•</span>
+                          <div className="flex items-center gap-1">
+                            <img 
+                              src={`https://flagcdn.com/${countryCodes[member.country].toLowerCase()}.svg`}
+                              alt={`${member.country} flag`}
+                              className="w-4 h-3 object-cover rounded-sm"
+                            />
+                            <p className="text-muted-foreground text-sm">{member.country}</p>
+                          </div>
+                        </div>
                         <p className="text-muted-foreground">{member.bio}</p>
                       </div>
                       <div className="flex space-x-3 pt-4 mt-auto">
