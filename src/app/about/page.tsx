@@ -417,7 +417,7 @@ export default function AboutPage() {
                   We're always looking for talented individuals to join our team.
                 </p>
                 <Link 
-                  href="/careers" 
+                  href="/career" 
                   className="inline-flex items-center px-6 py-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   Join Our Team
