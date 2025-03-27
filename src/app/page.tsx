@@ -1,8 +1,11 @@
+'use client';
+
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { FiGithub, FiExternalLink, FiCode, FiPackage, FiServer, FiDownload } from 'react-icons/fi';
 import { getGithubRepos } from '@/lib/github';
 import Script from 'next/script';
+import { motion } from 'framer-motion';
 
 const EarthModel = dynamic(() => import('./components/EarthModel'), {
   ssr: false,
@@ -201,6 +204,38 @@ export default async function Home() {
 
       <main>
         <section className="hero">
+          {/* Animated Background - Only in hero section */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute inset-0 animate-gradient" />
+            <motion.div
+              initial={{ opacity: 0.4 }}
+              animate={{
+                opacity: [0.4, 0.8, 0.4],
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(147,51,234,0.3),transparent_70%)]"
+            />
+            <motion.div
+              initial={{ opacity: 0.3 }}
+              animate={{
+                opacity: [0.3, 0.7, 0.3],
+                scale: [1, 1.3, 1],
+              }}
+              transition={{
+                duration: 7,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0.5,
+              }}
+              className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(99,102,241,0.3),transparent_70%)]"
+            />
+          </div>
+
           <div className="hero-content">
             <h1 className="hero-title">
               Building the future of open source software
@@ -208,7 +243,7 @@ export default async function Home() {
             <p className="hero-description">
               Creating universal and simple software that empowers developers and users alike.
             </p>
-            <div className="flex gap-4 mt-8">
+            <div className="hero-buttons">
               <Link href="/products" className="btn btn-primary">
                 Explore Products
               </Link>
