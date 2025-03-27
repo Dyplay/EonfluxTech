@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { FiGithub, FiTwitter, FiLinkedin, FiMail, FiArrowRight } from 'react-icons/fi';
+import { FiGithub, FiTwitter, FiLinkedin, FiMail, FiArrowRight, FiYoutube, FiInstagram } from 'react-icons/fi';
 
 // Animation variants
 const fadeIn = {
@@ -43,6 +43,55 @@ export default function AboutPage() {
       bio: "Major fan of Jinx from arcane, And loves coding!",
       links: {
         github: "https://github.com/DreamyzLovez"
+      }
+    },
+    {
+      name: "Manu Shahverdyan",
+      role: "Digital Artist & Developer",
+      image: "/team/manu.jpg",
+      bio: "An artist working in both traditional and digital mediums also has a passion for programming.",
+      links: {
+        github: "https://github.com/laufeyscn"
+      }
+    },
+    {
+      name: "Stefan Zax",
+      role: "Linux System Administrator & DevOps Engineer",
+      image: "/team/stefan.png",
+      bio: "No bio set.",
+      links: {
+        github: "https://github.com/Firefly9877"
+      }
+    },
+    {
+      name: "Patrick Haipl",
+      role: "Hardware Technician",
+      image: "/team/patrick.png",
+      bio: "No bio set.",
+      links: {
+        github: "https://github.com/Fox11001",
+        youtube: "https://www.youtube.com/channel/UCBy8zu0uwtxuUvw7S28LGZw"
+      }
+    },
+    {
+      name: "Gergő Marosán",
+      role: "Fullstack - Developer",
+      image: "/team/geri.png",
+      bio: "No bio set.",
+      links: {
+        github: "https://github.com/Fox11001",
+        youtube: "https://www.youtube.com/channel/UCBy8zu0uwtxuUvw7S28LGZw"
+      }
+    },
+    {
+      name: "Mirki Peresztegi",
+      role: "Backend - Web Developer",
+      image: "/team/868k0Oi.jpg",
+      bio: "Discord bot Developer, Web Developer, Youtuber",
+      links: {
+        github: "https://github.com/mirki240",
+        youtube: "https://www.youtube.com/@Mirki_240",
+        instagram: "https://www.instagram.com/mirki_240/"
       }
     },
   ];
@@ -345,6 +394,16 @@ export default function AboutPage() {
                         {member.links.linkedin && (
                           <Link href={member.links.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                             <FiLinkedin className="h-5 w-5" />
+                          </Link>
+                        )}
+                        {member.links.youtube && (
+                          <Link href={member.links.youtube} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                            <FiYoutube className="h-5 w-5" />
+                          </Link>
+                        )}
+                        {member.links.instagram && (
+                          <Link href={member.links.instagram} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                            <FiInstagram className="h-5 w-5" />
                           </Link>
                         )}
                       </div>
