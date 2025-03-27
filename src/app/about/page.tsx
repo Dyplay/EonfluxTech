@@ -84,7 +84,7 @@ export default function AboutPage() {
       }
     },
     {
-      name: "Mirki Peresztegi",
+      name: "Mirkó Peresztegi",
       role: "Backend - Web Developer",
       image: "/team/868k0Oi.jpg",
       bio: "Discord bot Developer, Web Developer, Youtuber",
