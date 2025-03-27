@@ -66,6 +66,7 @@ export default function NewAssignmentPage() {
   useEffect(() => {
     if (isLoading) {
       console.log('Still loading, waiting for auth...');
+      setIsLoading(false);
       return;
     }
 
@@ -140,6 +141,8 @@ export default function NewAssignmentPage() {
           console.log('Found existing jobs:', response.documents);
           setJobs(response.documents as unknown as Job[]);
         }
+
+        setIsLoading(false);
       } catch (error) {
         console.error('Error setting up jobs:', error);
         console.error('Error details:', {
