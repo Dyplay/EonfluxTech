@@ -72,7 +72,7 @@
   }
 
   .hero-content {
-    @apply relative z-10 text-center max-w-[800px] mx-auto px-4 flex flex-col items-center;
+    @apply relative z-10 text-center max-w-[900px] mx-auto px-4 flex flex-col items-center;
   }
 
   .hero-title {
