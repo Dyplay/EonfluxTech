@@ -141,6 +141,30 @@ interface Chat {
   createdAt: string;
 }
 
+// Add a responsive hook to detect mobile views
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Check initially
+    checkIsMobile();
+    
+    // Add event listener
+    window.addEventListener('resize', checkIsMobile);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', checkIsMobile);
+    };
+  }, []);
+  
+  return isMobile;
+};
+
 export default function AIExperiment() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -161,7 +185,7 @@ export default function AIExperiment() {
   // Add a new state to track scroll position
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isAtBottom, setIsAtBottom] = useState(true);
-  
+
   // Redirect if not authenticated
   useEffect(() => {
     if (!loading && !user) {
@@ -422,7 +446,7 @@ export default function AIExperiment() {
   useEffect(() => {
     // Only scroll if there are messages
     if (messages.length > 0) {
-      scrollToBottom();
+    scrollToBottom();
       
       // Highlight code blocks after messages update
       highlightCode();
@@ -499,7 +523,7 @@ export default function AIExperiment() {
     saveMessages(updatedMessages);
     setInput('');
     setIsLoading(true);
-    
+
     // Scroll immediately after adding the user message
     setTimeout(scrollToBottom, 50);
 
@@ -572,7 +596,7 @@ export default function AIExperiment() {
       saveMessages(emptyMessages);
     } else {
       console.log('No active chat to clear');
-      setMessages([]);
+    setMessages([]);
     }
   };
 
@@ -607,291 +631,454 @@ export default function AIExperiment() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeChat, user?.$id]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="p-8 rounded-lg bg-card"
-        >
-          <FiCpu className="w-8 h-8 animate-spin text-primary" />
-        </motion.div>
-      </div>
-    );
-  }
+  // In the component body
+  const isMobile = useIsMobile();
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gradient-to-b from-background to-background/90 flex">
+    <div className={`h-screen overflow-hidden ${
+      isMobile 
+        ? 'bg-[#13111c] text-slate-200' 
+        : 'bg-gradient-to-b from-background to-background/90'
+      } ${isMobile ? 'flex flex-col' : 'flex flex-row'}`}>
+      
       {/* Add CodeHighlighter component */}
       <CodeHighlighter />
+      
+      {/* Mobile Header - Only shown on mobile */}
+      {isMobile && (
+        <div className="flex items-center justify-between p-3 border-b border-slate-800">
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 rounded-md bg-slate-800/80"
+          >
+            <FiMenu className="w-5 h-5 text-slate-300" />
+          </button>
+          <h1 className="font-semibold text-lg">NEXUS AI</h1>
+          <button
+            onClick={createNewChat}
+            className="p-2 rounded-md bg-primary/20 text-primary"
+          >
+            <FiPlus className="w-5 h-5" />
+          </button>
+        </div>
+      )}
       
       {/* Sidebar */}
       <motion.div 
         initial={{ x: isSidebarOpen ? 0 : -280 }}
         animate={{ x: isSidebarOpen ? 0 : -280 }}
         transition={{ duration: 0.3 }}
-        className="w-72 border-r border-border/30 bg-card/80 backdrop-blur-sm h-screen flex flex-col z-30"
+        className={`${isMobile ? 'w-full' : 'w-72'} max-w-[280px] border-r border-border/30 ${
+          isMobile ? 'bg-[#13111c]/95' : 'bg-card/80'
+        } backdrop-blur-sm h-screen flex-shrink-0 flex flex-col z-40 ${
+          isMobile ? 'fixed' : 'relative'
+        } left-0 top-0`}
       >
-        <div className="flex items-center justify-between p-4 border-b border-border/30">
+        {/* Sidebar header - hide on mobile */}
+        {!isMobile && (
+          <div className="flex items-center justify-between p-4 border-b border-border/30">
           <div className="flex items-center gap-2">
-            <FiCpu className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold">AI Chat</h2>
+              <FiCpu className="w-5 h-5 text-primary" />
+              <h2 className="font-semibold">NEXUS AI</h2>
+            </div>
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-1.5 hover:bg-accent/50 rounded-md"
+            >
+              <FiX className="w-4 h-4" />
+            </button>
           </div>
-          <button
-            onClick={() => setIsSidebarOpen(false)}
-            className="p-1.5 hover:bg-accent/50 rounded-md"
-          >
-            <FiX className="w-4 h-4" />
-          </button>
-        </div>
+        )}
         
+        {/* Mobile Sidebar Header */}
+        {isMobile && (
+          <div className="flex items-center justify-between p-4 border-b border-slate-800/30">
+            <h2 className="font-semibold text-slate-100">Conversations</h2>
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-1.5 hover:bg-slate-800 rounded-md text-slate-300"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+        
+        {/* New Chat button - styled differently for mobile */}
         <div className="p-3">
           <button
             onClick={createNewChat}
             disabled={isLoadingChats}
-            className="w-full flex items-center justify-center gap-2 p-2 rounded-md bg-primary/10 hover:bg-primary/20 text-primary font-medium transition-colors"
+            className={`w-full flex items-center justify-center gap-2 p-2 rounded-md ${
+              isMobile 
+                ? 'bg-primary/20 hover:bg-primary/30 text-primary' 
+                : 'bg-primary/10 hover:bg-primary/20 text-primary'
+            } font-medium transition-colors`}
           >
             <FiPlus className="w-4 h-4" />
             New Chat
           </button>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-2">
+        {/* Chat List */}
+        <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {isLoadingChats ? (
-            <div className="space-y-2 p-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-10 bg-accent/30 animate-pulse rounded-md"></div>
-              ))}
+            <div className="flex flex-col items-center justify-center h-32">
+              <FiRefreshCw className="animate-spin w-6 h-6 text-muted-foreground mb-2" />
+              <span className="text-sm text-muted-foreground">Loading chats...</span>
             </div>
           ) : chats.length === 0 ? (
-            <div className="text-center p-6 text-muted-foreground">
-              <FiMessageSquare className="w-6 h-6 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No conversations yet</p>
+            <div className="text-center p-4">
+              <span className="text-sm text-muted-foreground">No chats yet</span>
             </div>
           ) : (
-            <div className="space-y-1">
-              {chats.map((chat) => (
-                <div
-                  key={chat.$id}
-                  className={`group relative rounded-md p-2 pr-8 cursor-pointer transition-colors ${
-                    activeChat === chat.$id ? 'bg-accent text-foreground' : 'hover:bg-accent/50 text-muted-foreground'
-                  }`}
+            chats.map((chat) => (
+              <div key={chat.$id} className="relative group">
+                <button
+                  onClick={() => {
+                    setActiveChat(chat.$id);
+                    loadChat(chat);
+                    if (isMobile) setIsSidebarOpen(false);
+                  }}
+                  className={`w-full text-left flex items-center gap-2 p-2 rounded-md ${
+                    activeChat === chat.$id 
+                      ? isMobile 
+                        ? 'bg-primary/20 text-primary' 
+                        : 'bg-primary/10 text-primary' 
+                      : isMobile 
+                        ? 'hover:bg-slate-800 text-slate-300' 
+                        : 'hover:bg-accent'
+                  } transition-colors truncate text-sm`}
                 >
-                  {editingTitle === chat.$id ? (
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        updateChatTitle(chat.$id, newTitle);
-                      }}
-                      className="flex items-center"
-                    >
+                  <FiMessageSquare className={`w-4 h-4 flex-shrink-0 ${
+                    activeChat === chat.$id ? 'text-primary' : 'text-muted-foreground'
+                  }`} />
+                  <span className="truncate">
+                    {editingTitle === chat.$id ? (
                       <input
                         type="text"
                         value={newTitle}
                         onChange={(e) => setNewTitle(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            updateChatTitle(chat.$id, newTitle);
+                          } else if (e.key === 'Escape') {
+                            setEditingTitle(null);
+                          }
+                        }}
+                        onBlur={() => {
+                          if (newTitle.trim()) {
+                            updateChatTitle(chat.$id, newTitle);
+                          } else {
+                            setEditingTitle(null);
+                          }
+                        }}
                         autoFocus
-                        className="w-full bg-transparent border-none outline-none focus:ring-0 p-0 text-sm"
-                        placeholder="Chat title"
+                        className={`w-full bg-transparent border-none focus:outline-none focus:ring-0 ${
+                          isMobile ? 'text-primary' : 'text-primary'
+                        }`}
                       />
-                      <button type="submit" className="ml-1 p-1 text-primary">
-                        <FiChevronRight className="w-3 h-3" />
-                      </button>
-                    </form>
-                  ) : (
-                    <div
-                      onClick={() => {
-                        console.log('Switching to chat:', chat.$id);
-                        
-                        // Clear messages before switching
-                        setMessages([]);
-                        
-                        // Set the active chat ID
-                        setActiveChat(chat.$id);
-                        
-                        // Immediately fetch the chat document to ensure fresh data
-                        console.log('Explicitly fetching chat document');
-                        databases.getDocument(
-                          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-                          'ai',
-                          chat.$id
-                        )
-                        .then(document => {
-                          console.log('Fetched chat document directly:', document);
-                          loadChat(document as unknown as Chat);
-                        })
-                        .catch(error => {
-                          console.error('Error fetching chat directly:', error);
-                        });
-                      }}
-                      className="flex items-center gap-2 truncate"
-                    >
-                      <FiMessageSquare className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-sm truncate">{chat.title || 'New Conversation'}</span>
-                    </div>
-                  )}
-                  
-                  <div className="absolute right-1 top-1/2 -translate-y-1/2 flex opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingTitle(chat.$id);
-                        setNewTitle(chat.title);
-                      }}
-                      className="p-1 hover:text-primary"
-                    >
-                      <FiEdit2 className="w-3 h-3" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
+                    ) : (
+                      chat.title || 'New Conversation'
+                    )}
+                  </span>
+                </button>
+                <div className={`absolute right-1 top-1 ${
+                  activeChat === chat.$id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                } transition-opacity flex gap-1`}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingTitle(chat.$id);
+                      setNewTitle(chat.title);
+                    }}
+                    className={`p-1 rounded-md ${
+                      isMobile 
+                        ? 'hover:bg-slate-700 text-slate-400 hover:text-slate-200' 
+                        : 'hover:bg-accent/80 text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <FiEdit2 className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm('Are you sure you want to delete this chat?')) {
                         deleteChat(chat.$id);
-                      }}
-                      className="p-1 hover:text-destructive"
-                    >
-                      <FiTrash2 className="w-3 h-3" />
-                    </button>
-                  </div>
+                      }
+                    }}
+                    className={`p-1 rounded-md ${
+                      isMobile 
+                        ? 'hover:bg-red-900/30 text-slate-400 hover:text-red-400' 
+                        : 'hover:bg-destructive/10 text-muted-foreground hover:text-destructive'
+                    }`}
+                  >
+                    <FiTrash2 className="w-3 h-3" />
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))
           )}
         </div>
-      </motion.div>
-      
-      {/* Main Content Area */}
-      <div className="flex-1 h-screen flex flex-col overflow-hidden relative">
-        {/* Mobile Sidebar Toggle */}
-        {!isSidebarOpen && (
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="absolute top-4 left-4 p-2 rounded-md bg-card border border-border/50 shadow-sm z-40"
-          >
-            <FiMenu className="w-5 h-5" />
-          </button>
-        )}
-
-        {/* Chat actions (shown if there are messages) */}
-        {messages.length > 0 && (
-          <div className="absolute top-4 right-4 z-30">
-            <button
-              onClick={clearChat}
-              className="p-2 bg-card/80 backdrop-blur-sm hover:bg-destructive/10 rounded-full transition-colors border border-border/50 shadow-sm"
-              title="Clear chat"
-            >
-              <FiTrash2 className="w-4 h-4 text-destructive" />
-            </button>
+        
+        {/* User section at bottom of sidebar */}
+        <div className={`p-3 border-t ${
+          isMobile ? 'border-slate-800/50' : 'border-border/30'
+        } flex items-center gap-2`}>
+          <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
+            {user?.prefs?.avatar ? (
+              <Image 
+                src={user.prefs.avatar} 
+                alt={user.name || 'User'} 
+                width={32} 
+                height={32}
+                className="object-cover w-full h-full"
+              />
+            ) : (
+              <FiUser className="w-4 h-4 text-primary" />
+            )}
           </div>
-        )}
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-sm truncate">
+              {user?.name || 'User'}
+            </div>
+            <div className="text-xs text-muted-foreground truncate">
+              {user?.email || 'Loading...'}
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
-        {/* Message Container - adjust padding and margin to position input higher */}
+      {/* Dark overlay when sidebar is open on mobile */}
+      {isMobile && isSidebarOpen && (
         <div 
-          ref={chatContainerRef}
-          className="flex-grow overflow-y-auto p-4 pb-28 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
-          style={{ marginBottom: "10px" }}
-        >
-          <div className="container max-w-4xl mx-auto">
-            <AnimatePresence>
-              {messages.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="flex flex-col items-center justify-center h-[60vh]"
-                >
-                  <div className="bg-primary/10 p-6 rounded-full mb-6">
-                    <FiCpu className="w-12 h-12 text-primary" />
-                  </div>
-                  <h2 className="text-2xl font-bold mb-3">Meet NEXUS</h2>
-                  <p className="text-muted-foreground text-center max-w-md mb-8">
-                    Ask me anything and I'll do my best to help you with information, tasks, or creative ideas.
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg">
-                    {["How can you help me?", "Tell me about this project", "What technologies do you know?", "Write a poem about AI"].map((suggestion) => (
+          className="fixed inset-0 bg-black/70 z-30" 
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Main Content Area - use different styles for mobile */}
+      <div className={`flex-1 h-screen flex flex-col overflow-hidden relative max-w-full ${
+        isMobile ? 'pb-16' : ''
+      }`}>
+        {/* Mobile chat list view - only shown when there are no messages on mobile */}
+        {isMobile && messages.length === 0 && (
+          <div className="p-2 flex-1 overflow-y-auto">
+            <div className="space-y-2">
+              <div className="bg-primary/15 p-5 rounded-xl mb-4 flex items-center justify-center">
+                <FiCpu className="w-8 h-8 text-primary" />
+              </div>
+              
+              <h2 className="text-lg font-medium text-center mb-4">How can I help you today?</h2>
+              
+              <div className="grid grid-cols-1 gap-2 mb-6">
+                {[
+                  "How do I create a React component?",
+                  "Explain Next.js server components",
+                  "What's a good UI pattern for forms?",
+                  "Help me organize my project structure"
+                ].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => {
+                      setInput(suggestion);
+                      setTimeout(() => {
+                        handleSubmit(new Event('click') as any);
+                      }, 100);
+                    }}
+                    className="flex items-center justify-between text-left p-3 rounded-xl border border-slate-700/80 hover:border-primary/30 hover:bg-slate-800/50 transition-colors text-sm text-slate-300"
+                  >
+                    <span className="line-clamp-1">{suggestion}</span>
+                    <FiChevronRight className="w-4 h-4 text-slate-500 flex-shrink-0 ml-2" />
+                  </button>
+                ))}
+              </div>
+              
+              {chats.length > 0 && (
+                <>
+                  <h3 className="text-sm font-medium text-slate-400 mb-2">Recent chats</h3>
+                  <div className="space-y-1">
+                    {chats.slice(0, 5).map((chat) => (
                       <button
-                        key={suggestion}
+                        key={chat.$id}
                         onClick={() => {
-                          setInput(suggestion);
-                          inputRef.current?.focus();
+                          setActiveChat(chat.$id);
+                          databases.getDocument(
+                            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+                            'ai',
+                            chat.$id
+                          )
+                          .then(document => {
+                            loadChat(document as unknown as Chat);
+                          });
                         }}
-                        className="flex items-center justify-between text-left p-3 rounded-lg border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-colors"
+                        className="flex items-center gap-2 w-full p-2 rounded-md text-left text-slate-300 hover:bg-slate-800/50"
                       >
-                        <span className="text-sm">{suggestion}</span>
-                        <FiChevronRight className="w-4 h-4 text-muted-foreground" />
+                        <FiMessageSquare className="w-4 h-4 text-slate-400" />
+                        <span className="text-sm truncate">{chat.title || 'New Conversation'}</span>
                       </button>
                     ))}
                   </div>
-                </motion.div>
-              ) : (
-                messages.map((message) => (
-                  <motion.div
-                    key={message.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className={`flex gap-3 mb-6 ${
-                      message.role === 'assistant' ? 'items-start' : 'items-start flex-row-reverse'
-                    }`}
-                  >
-                    <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ${
-                        message.role === 'assistant' 
-                          ? 'bg-primary/15 text-primary ring-1 ring-primary/25' 
-                          : 'bg-secondary/70 ring-1 ring-border/50'
-                      }`}
-                    >
-                      {message.role === 'assistant' ? (
-                        <FiCpu className="w-4 h-4" />
-                      ) : user?.prefs?.avatar ? (
-                        <Image 
-                          src={user.prefs.avatar} 
-                          alt={user.name || 'User'} 
-                          width={36} 
-                          height={36} 
-                          className="object-cover w-full h-full"
-                        />
-                      ) : (
-                        <span className="text-sm font-medium">
-                          {user?.name?.[0] || 'U'}
-                        </span>
-                      )}
-                    </div>
-                    <div
-                      className={`p-4 rounded-lg max-w-[85%] shadow-sm ${
-                        message.role === 'assistant'
-                          ? 'bg-card border border-border/50'
-                          : 'bg-primary text-primary-foreground'
-                      }`}
-                    >
-                      {formatMessage(message.content)}
-                    </div>
-                  </motion.div>
-                ))
+                </>
               )}
-              {isLoading && (
+            </div>
+          </div>
+        )}
+        
+        {/* Desktop empty state */}
+        {!isMobile && messages.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+            className="flex flex-col items-center justify-center h-[60vh] px-4"
+          >
+            <div className="bg-primary/10 p-6 rounded-full mb-6">
+              <FiCpu className="w-12 h-12 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold mb-3">Meet NEXUS</h2>
+            <p className="text-muted-foreground text-center max-w-md mb-8">
+              Your AI assistant for web development, UI/UX design, and project management. Ask me anything about Next.js, React, or modern web development!
+            </p>
+            <div className="grid grid-cols-2 gap-3 w-full max-w-lg">
+              {[
+                "How do I create a React component?",
+                "Explain Next.js server components",
+                "What's a good UI pattern for forms?",
+                "Help me organize my project structure"
+              ].map((suggestion) => (
+                <button
+                  key={suggestion}
+                  onClick={() => {
+                    setInput(suggestion);
+                    inputRef.current?.focus();
+                  }}
+                  className="flex items-center justify-between text-left p-3 rounded-lg border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-colors"
+                >
+                  <span className="text-sm">{suggestion}</span>
+                  <FiChevronRight className="w-4 h-4 text-muted-foreground" />
+                </button>
+              ))}
+            </div>
+              </motion.div>
+        )}
+
+        {/* Message Container - conditional styling for mobile */}
+        {messages.length > 0 && (
+          <>
+            {/* Mobile chat header with actions */}
+            {isMobile && (
+              <div className="p-2 flex justify-end">
+                <button
+                  onClick={clearChat}
+                  className="p-2 bg-slate-800/80 hover:bg-red-900/20 rounded-full transition-colors border border-slate-700/50"
+                  title="Clear chat"
+                >
+                  <FiTrash2 className="w-4 h-4 text-red-400" />
+                </button>
+              </div>
+            )}
+            
+            {/* Desktop chat actions */}
+            {!isMobile && messages.length > 0 && (
+              <div className="absolute top-4 right-4 z-30">
+                <button
+                  onClick={clearChat}
+                  className="p-2 bg-card/80 backdrop-blur-sm hover:bg-destructive/10 rounded-full transition-colors border border-border/50 shadow-sm"
+                  title="Clear chat"
+                >
+                  <FiTrash2 className="w-4 h-4 text-destructive" />
+                </button>
+              </div>
+            )}
+            
+            <div 
+              ref={chatContainerRef}
+              className={`flex-grow overflow-y-auto overflow-x-hidden ${
+                isMobile 
+                  ? 'p-2 pb-20' 
+                  : 'p-4 pb-28'
+              } scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent`}
+            >
+              <div className="container max-w-4xl mx-auto">
+                <AnimatePresence>
+                  {messages.map((message) => (
                 <motion.div
+                  key={message.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex gap-3 items-start mb-6"
+                  exit={{ opacity: 0, y: -20 }}
+                      className={`flex gap-2 mb-4 ${
+                    message.role === 'assistant' ? 'items-start' : 'items-start flex-row-reverse'
+                  }`}
                 >
-                  <div className="w-9 h-9 rounded-full bg-primary/15 text-primary ring-1 ring-primary/25 flex items-center justify-center">
-                    <FiRefreshCw className="w-4 h-4 animate-spin" />
+                  <div
+                        className={`${isMobile ? 'w-7 h-7' : 'w-9 h-9'} rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ${
+                          message.role === 'assistant' 
+                            ? 'bg-primary/15 text-primary ring-1 ring-primary/25' 
+                            : isMobile ? 'bg-slate-700 ring-1 ring-slate-600' : 'bg-secondary/70 ring-1 ring-border/50'
+                    }`}
+                  >
+                    {message.role === 'assistant' ? (
+                          <FiCpu className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                        ) : user?.prefs?.avatar ? (
+                          <Image 
+                            src={user.prefs.avatar} 
+                            alt={user.name || 'User'} 
+                            width={36} 
+                            height={36} 
+                            className="object-cover w-full h-full"
+                          />
+                        ) : (
+                          <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>
+                            {user?.name?.[0] || 'U'}
+                      </span>
+                    )}
                   </div>
-                  <div className="p-4 rounded-lg bg-card border border-border/50 shadow-sm">
-                    <div className="flex gap-1">
-                      <span className="animate-bounce">●</span>
-                      <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>●</span>
-                      <span className="animate-bounce" style={{ animationDelay: '0.4s' }}>●</span>
-                    </div>
+                  <div
+                        className={`${isMobile ? 'p-2.5' : 'p-4'} rounded-lg ${isMobile ? 'max-w-[85%]' : 'max-w-[80%]'} shadow-sm ${
+                      message.role === 'assistant'
+                            ? isMobile 
+                              ? 'bg-slate-800/90 border border-slate-700/50 text-sm text-slate-300' 
+                              : 'bg-card border border-border/50 text-base'
+                            : isMobile 
+                              ? 'bg-primary/80 text-primary-foreground text-sm' 
+                              : 'bg-primary text-primary-foreground text-base'
+                        }`}
+                      >
+                        {formatMessage(message.content)}
                   </div>
                 </motion.div>
-              )}
-            </AnimatePresence>
-            <div ref={messagesEndRef} className="h-4" />
-          </div>
+                  ))}
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                      className={`flex gap-2 items-start mb-4`}
+              >
+                      <div className={`${isMobile ? 'w-7 h-7' : 'w-9 h-9'} rounded-full bg-primary/15 text-primary ring-1 ring-primary/25 flex items-center justify-center`}>
+                        <FiRefreshCw className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} animate-spin`} />
+                </div>
+                      <div className={`${isMobile ? 'p-2.5' : 'p-4'} rounded-lg ${
+                        isMobile ? 'bg-slate-800/90 border border-slate-700/50' : 'bg-card border border-border/50'
+                      } shadow-sm`}>
+                  <div className="flex gap-1">
+                    <span className="animate-bounce">●</span>
+                    <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>●</span>
+                    <span className="animate-bounce" style={{ animationDelay: '0.4s' }}>●</span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+                <div ref={messagesEndRef} className="h-4" />
         </div>
+      </div>
+          </>
+        )}
 
-        {/* Input Bar - adjusted position with margin-top to move it higher */}
+        {/* Input Bar - different styling for mobile */}
         <div 
           style={{ 
             height: "80px", 
@@ -904,27 +1091,38 @@ export default function AIExperiment() {
             zIndex: 50,
             marginTop: "-10px" // Negative margin to pull it up
           }} 
-          className="bg-card/95 rounded-t-xl mx-4"
+          className={`bg-card/95 rounded-t-xl mx-4 z-50 ${
+            isMobile 
+              ? 'bg-[#13111c] border-t border-slate-800 py-2 px-2' 
+              : 'bg-card/95 rounded-t-xl mx-4 pb-2 pt-2'
+          }`}
         >
-          <div className="container max-w-4xl mx-auto h-full px-4 py-2">
-            <form onSubmit={handleSubmit} className="h-full flex items-center">
+          <div className={`container mx-auto ${isMobile ? 'max-w-full' : 'max-w-4xl px-4'}`}>
+            <form onSubmit={handleSubmit} className="flex items-center">
               <div className="w-full relative">
-                <input
-                  type="text"
-                  ref={inputRef as any}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type your message..."
-                  style={{ height: "50px" }}
-                  className="w-full px-5 pr-14 rounded-full bg-background/80 border border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/80 shadow-md text-base"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit(e);
-                    }
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your message..."
+              rows={1}
+                  style={{ 
+                    resize: 'none',
+                    height: input.split('\n').length > 1 ? 'auto' : (isMobile ? '40px' : '45px')
                   }}
-                />
-                <div className="absolute inset-y-0 right-3 flex items-center">
+                  className={`w-full px-3 pr-10 py-2 rounded-full ${
+                    isMobile 
+                      ? 'bg-slate-800 border-slate-700 text-sm text-slate-200 placeholder-slate-500 h-6' 
+                      : 'bg-background/80 border-border/50 text-base'
+                  } border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/80 shadow-md overflow-hidden`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+            />
+                <div className="absolute inset-y-0 right-1 flex items-center">
                   <button
                     type="submit"
                     disabled={isLoading || !input.trim()}

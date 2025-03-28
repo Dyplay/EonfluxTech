@@ -6,27 +6,6 @@ const openai = new OpenAI({
   apiKey: process.env.CHATGPT_API_KEY,
 });
 
-// Define a custom system prompt that gives the AI a specific role and personality
-const SYSTEM_PROMPT = `You are NEXUS, the AI assistant for the Next Foundation website. 
-Your personality is friendly, knowledgeable, and slightly witty. You specialize in:
-
-1. Web Development - You're an expert in React, Next.js, and modern frontend technologies
-2. User Experience - You can provide design advice and best practices for web interfaces
-3. Project Management - You help users organize their development workflows efficiently
-
-When users ask questions, provide concise, practical answers with code examples when relevant.
-Always format code using proper markdown syntax with language specification.
-
-For example:
-\`\`\`javascript
-function example() {
-  return "Hello World";
-}
-\`\`\`
-
-Remember that you're representing the Next Foundation platform, which aims to make web development 
-more accessible and efficient. Your tone should be professional but approachable.`;
-
 export async function POST(req: Request) {
   try {
     const { message, userId, chatHistory = [] } = await req.json();
@@ -41,10 +20,28 @@ export async function POST(req: Request) {
       content: msg.content,
     }));
 
-    // Create messages array for chat completion
+    // Create messages array for chat completion with improved system message for code formatting
     const messages = [
-      // System message to set the context and behavior
-      { role: 'system', content: SYSTEM_PROMPT },
+      // System message to set the context and behavior with specific instructions for code formatting
+      { 
+        role: 'system', 
+        content: `You are a helpful, friendly AI assistant with expertise in many topics. Respond concisely and helpfully to the user's queries.
+
+When sharing code examples, always format them using proper markdown code blocks with language specification. For example:
+
+\`\`\`python
+def example_function():
+    return "Hello World"
+\`\`\`
+
+\`\`\`javascript
+function exampleFunction() {
+    return "Hello World";
+}
+\`\`\`
+
+This ensures code is displayed with proper syntax highlighting and formatting in the chat interface.`
+      },
       // If there's chat history, include it
       ...formattedHistory,
       // Add the current message
@@ -78,21 +75,30 @@ export async function POST(req: Request) {
       try {
         console.log('Falling back to text-davinci-003');
         
-        // Format a text prompt instead with the custom system prompt
-        let prompt = `${SYSTEM_PROMPT}
+        // Format a text prompt instead with code formatting instructions
+        let prompt = `You are a helpful, friendly AI assistant with expertise in many topics. Respond concisely and helpfully to the user's queries.
+
+When sharing code examples, always format them using proper markdown code blocks with language specification. For example:
+
+\`\`\`python
+def example_function():
+    return "Hello World"
+\`\`\`
+
+This ensures code is displayed with proper syntax highlighting and formatting.
 
 `;
         
         // Add chat history to the prompt
         if (chatHistory.length > 0) {
           chatHistory.forEach((msg: any) => {
-            const role = msg.role === 'user' ? 'User' : 'NEXUS';
+            const role = msg.role === 'user' ? 'User' : 'Assistant';
             prompt += `${role}: ${msg.content}\n`;
           });
         }
         
         // Add the current message
-        prompt += `User: ${message}\nNEXUS:`;
+        prompt += `User: ${message}\nAssistant:`;
         
         // Call the OpenAI API with Completions API as backup
         const fallbackResponse = await openai.completions.create({
