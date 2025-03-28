@@ -6,6 +6,7 @@ import { FiGithub, FiExternalLink, FiCode, FiPackage, FiServer, FiDownload } fro
 import { getGithubRepos } from '@/lib/github';
 import Script from 'next/script';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 
 const EarthModel = dynamic(() => import('./components/EarthModel'), {
   ssr: false,
@@ -49,6 +50,39 @@ const mockRepos = [
     updated_at: new Date().toISOString()
   }
 ];
+
+// Add this new component above the Home component
+const CardWithCursorEffect = ({ children }: { children: React.ReactNode }) => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setPosition({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
+
+  return (
+    <div
+      className="card relative overflow-hidden"
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
+      {/* Cursor light effect */}
+      <div
+        className="pointer-events-none absolute -inset-px opacity-0 transition duration-300"
+        style={{
+          opacity: isHovering ? 0.15 : 0,
+          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgb(147, 51, 234), transparent 40%)`,
+        }}
+      />
+      {children}
+    </div>
+  );
+};
 
 export default async function Home() {
   // Fetch repositories from GitHub API
@@ -263,7 +297,7 @@ export default async function Home() {
             <div className="feature-grid">
               {featuredRepos.length > 0 ? (
                 featuredRepos.map(repo => (
-                  <div key={repo.id} className="card">
+                  <CardWithCursorEffect key={repo.id}>
                     <div className="flex items-center gap-2 mb-3">
                       <div className="p-2 rounded-full bg-primary/10">
                         {getRepoIcon(repo)}
@@ -326,7 +360,7 @@ export default async function Home() {
                         <span className="font-medium">Note:</span> This is a placeholder example. No real projects could be retrieved from GitHub at this time.
                       </div>
                     )}
-                  </div>
+                  </CardWithCursorEffect>
                 ))
               ) : (
                 // Message when no repositories are found
@@ -356,6 +390,109 @@ export default async function Home() {
               >
                 View All Products
               </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-24 bg-background">
+          <div className="container">
+            <h2 className="text-3xl font-bold text-center mb-16">Join Our Open Source Journey</h2>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              {/* Community Driven */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="group relative p-6 rounded-2xl border bg-card hover:shadow-lg transition-all duration-300"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300" />
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Community Driven</h3>
+                  <p className="text-muted-foreground">Join a growing community of developers building the future of open source together.</p>
+                </div>
+              </motion.div>
+
+              {/* Contribute & Learn */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="group relative p-6 rounded-2xl border bg-card hover:shadow-lg transition-all duration-300"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300" />
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Contribute & Learn</h3>
+                  <p className="text-muted-foreground">Perfect your skills by contributing to real projects. Learn from experienced developers in our community.</p>
+                </div>
+              </motion.div>
+
+              {/* Free Forever */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="group relative p-6 rounded-2xl border bg-card hover:shadow-lg transition-all duration-300"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300" />
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Free Forever</h3>
+                  <p className="text-muted-foreground">All our projects are and will always be free and open source. No hidden costs, no premium features.</p>
+                </div>
+              </motion.div>
+            </div>
+
+            <div className="mt-16 grid md:grid-cols-3 gap-6 text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="p-4"
+              >
+                <h4 className="text-4xl font-bold text-primary mb-2">99%</h4>
+                <p className="text-muted-foreground">Open Source</p>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                className="p-4"
+              >
+                <h4 className="text-4xl font-bold text-primary mb-2">MIT</h4>
+                <p className="text-muted-foreground">Licensed</p>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+                className="p-4"
+              >
+                <h4 className="text-4xl font-bold text-primary mb-2">∞</h4>
+                <p className="text-muted-foreground">Possibilities</p>
+              </motion.div>
             </div>
           </div>
         </section>

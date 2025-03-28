@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -10,18 +10,50 @@ import { account } from '@/lib/appwrite';
 import { Models } from 'appwrite';
 import { useTranslation } from './TranslationProvider';
 
+interface SearchResult {
+  title: string;
+  description: string;
+  url: string;
+  type: 'page' | 'blog' | 'product' | 'career' | 'section';
+  icon?: React.ReactNode;
+  elementId?: string;
+  content?: string;
+}
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export default function Header() {
+  const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
+  const { t, locale } = useTranslation();
+
+  // Group all useState hooks together at the top
+  const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const { theme, toggleTheme } = useTheme();
-  const router = useRouter();
-  const { t, locale } = useTranslation();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
 
+  // Group all useEffect hooks together
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -31,8 +63,6 @@ export default function Header() {
       try {
         const userData = await account.get();
         setUser(userData);
-        
-        // Check if user is admin
         setIsAdmin(userData?.prefs?.admin === true || userData?.prefs?.admin === 'true');
       } catch (error) {
         console.error('Error fetching user:', error);
@@ -44,10 +74,33 @@ export default function Header() {
     checkUser();
   }, []);
 
-  // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [router]);
+
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const searchTermLower = searchTerm.toLowerCase();
+    const results = searchableContent.filter(item => 
+      item.title.toLowerCase().includes(searchTermLower) ||
+      item.description.toLowerCase().includes(searchTermLower) ||
+      (item.content && item.content.toLowerCase().includes(searchTermLower))
+    ).map(result => ({
+      ...result,
+      description: result.content?.toLowerCase().includes(searchTermLower)
+        ? `...${result.content.substring(
+            Math.max(0, result.content.toLowerCase().indexOf(searchTermLower) - 20),
+            Math.min(result.content.length, result.content.toLowerCase().indexOf(searchTermLower) + 60)
+          )}...`
+        : result.description
+    }));
+
+    setSearchResults(results);
+  }, [searchTerm]);
 
   const handleLogout = async () => {
     try {
@@ -74,6 +127,42 @@ export default function Header() {
     { href: '/blog', label: 'Blog' },
     { href: '/career', label: 'Careers' },
     { href: 'https://github.com/EonfluxTech-com', label: 'GitHub' }
+  ];
+
+  const searchableContent: SearchResult[] = [
+    {
+      title: 'About Our Mission',
+      description: 'Learn about our company mission and values',
+      url: '/about#mission',
+      type: 'section',
+      elementId: 'mission',
+      content: 'Creating universal and simple software that empowers developers and users alike.'
+    },
+    {
+      title: 'Our Products',
+      description: 'Featured open-source projects',
+      url: '/products#featured',
+      type: 'section',
+      elementId: 'featured',
+      content: 'Building the future of open source software with powerful and accessible tools.'
+    },
+    {
+      title: 'Latest Blog Posts',
+      description: 'Recent articles and updates',
+      url: '/blog#latest',
+      type: 'section',
+      elementId: 'latest',
+      content: 'Stay updated with our latest developments and tech insights.'
+    },
+    {
+      title: 'Contact Information',
+      description: 'Get in touch with us',
+      url: '/about#contact',
+      type: 'section',
+      elementId: 'contact',
+      content: 'Have questions about our projects or interested in collaborating? We\'d love to hear from you!'
+    },
+    // Add more searchable content with actual page content
   ];
 
   return (
@@ -201,25 +290,105 @@ export default function Header() {
               {isSearchOpen && (
                 <motion.div
                   initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 200, opacity: 1 }}
+                  animate={{ width: 300, opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="relative"
+                  className="relative z-50"
                 >
                   <input
                     type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onFocus={() => setShowResults(true)}
                     placeholder={t('common.search')}
                     className="w-full h-9 rounded-md border border-input px-3 py-1
                       text-sm shadow-sm transition-colors
                       focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
-                      placeholder:text-muted-foreground"
+                      placeholder:text-muted-foreground
+                      relative z-50 cursor-text text-black"
                     autoFocus
                   />
+                  
+                  {/* Search Results Dropdown */}
+                  <AnimatePresence>
+                    {showResults && searchResults.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute top-full left-0 right-0 mt-2 py-2 bg-background border rounded-md shadow-lg z-40 max-h-[400px] overflow-y-auto"
+                      >
+                        {searchResults.map((result) => (
+                          <Link
+                            key={result.url}
+                            href={result.url}
+                            onClick={() => {
+                              setIsSearchOpen(false);
+                              setShowResults(false);
+                              setSearchTerm('');
+                              if (result.elementId) {
+                                setTimeout(() => {
+                                  document.getElementById(result.elementId!)?.scrollIntoView({ behavior: 'smooth' });
+                                }, 100);
+                              }
+                            }}
+                            className="flex items-start gap-3 px-4 py-2 hover:bg-accent transition-colors"
+                          >
+                            <div className="flex-shrink-0 p-2 rounded-full bg-primary/10">
+                              {result.type === 'section' ? (
+                                <svg
+                                  className="h-4 w-4 text-primary"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                                  />
+                                </svg>
+                              ) : (
+                                <svg
+                                  className="h-4 w-4 text-primary"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 5l7 7-7 7"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-medium">{result.title}</h4>
+                              <p className="text-xs text-muted-foreground">
+                                {result.description}
+                              </p>
+                            </div>
+                          </Link>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               )}
             </AnimatePresence>
+            
             <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              onClick={() => {
+                setIsSearchOpen(!isSearchOpen);
+                if (!isSearchOpen) {
+                  setSearchTerm('');
+                  setSearchResults([]);
+                  setShowResults(false);
+                }
+              }}
               className="ml-2 p-2 rounded-md hover:bg-accent transition-colors"
               aria-label={isSearchOpen ? t('common.close_search') : t('common.open_search')}
             >
@@ -254,6 +423,14 @@ export default function Header() {
               </AnimatePresence>
             </button>
           </div>
+
+          {/* Click outside handler */}
+          {showResults && (
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setShowResults(false)}
+            />
+          )}
 
           {/* User Profile */}
           {!isLoading && (
