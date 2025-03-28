@@ -842,9 +842,9 @@ export default function AIExperiment() {
                     >
                       {message.role === 'assistant' ? (
                         <FiCpu className="w-4 h-4" />
-                      ) : user?.prefs?.avatarUrl ? (
+                      ) : user?.prefs?.avatar ? (
                         <Image 
-                          src={user.prefs.avatarUrl} 
+                          src={user.prefs.avatar} 
                           alt={user.name || 'User'} 
                           width={36} 
                           height={36} 
