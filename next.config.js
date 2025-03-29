@@ -36,6 +36,11 @@ const nextConfig = {
         hostname: 'flagcdn.com',
         pathname: '/w40/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'oaidalleapiprodscus.blob.core.windows.net',
+        pathname: '/**',
+      },
     ],
     domains: ['public-files.gumroad.com'],
   },

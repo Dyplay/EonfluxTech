@@ -8,7 +8,7 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
   try {
-    const { message, userId, chatHistory = [] } = await req.json();
+    const { message, userId, chatHistory = [], model = 'nexus-default' } = await req.json();
 
     if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -20,12 +20,21 @@ export async function POST(req: Request) {
       content: msg.content,
     }));
 
-    // Create messages array for chat completion with improved system message for code formatting
-    const messages = [
-      // System message to set the context and behavior with specific instructions for code formatting
-      { 
-        role: 'system', 
-        content: `You are a helpful, friendly AI assistant with expertise in many topics. Respond concisely and helpfully to the user's queries.
+    // Create system message based on model type
+    let systemMessage = '';
+    
+    if (model === 'nexus-image') {
+      systemMessage = `You are a helpful, friendly AI assistant with expertise in visual and creative topics. You have access to image generation capabilities.
+      
+When a user asks you to create or generate an image, kindly remind them to use the '/image' command followed by their description.
+
+For example:
+- "/image a beautiful sunset over mountains"
+- "/image a futuristic city with flying cars"
+
+When sharing code examples, always format them using proper markdown code blocks with language specification.`;
+    } else {
+      systemMessage = `You are a helpful, friendly AI assistant with expertise in many topics. Respond concisely and helpfully to the user's queries.
 
 When sharing code examples, always format them using proper markdown code blocks with language specification. For example:
 
@@ -40,15 +49,20 @@ function exampleFunction() {
 }
 \`\`\`
 
-This ensures code is displayed with proper syntax highlighting and formatting in the chat interface.`
-      },
+This ensures code is displayed with proper syntax highlighting and formatting in the chat interface.`;
+    }
+
+    // Create messages array for chat completion
+    const messages = [
+      // System message to set the context and behavior
+      { role: 'system', content: systemMessage },
       // If there's chat history, include it
       ...formattedHistory,
       // Add the current message
       { role: 'user', content: message }
     ];
 
-    console.log('Sending the following messages to OpenAI GPT-4o:', messages.length);
+    console.log(`Sending the following messages to OpenAI GPT-4o (model: ${model}):`, messages.length);
 
     // Call the OpenAI API with Chat Completions using GPT-4o
     const response = await openai.chat.completions.create({
