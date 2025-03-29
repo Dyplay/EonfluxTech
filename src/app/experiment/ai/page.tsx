@@ -1029,8 +1029,7 @@ export default function AIExperiment() {
         {isMobileCheck ? (
           <MobileWarning />
         ) : (
-          <div className={`h-screen overflow-hidden bg-gradient-to-b from-background to-background/90 flex flex-row`}>
-            {/* Main content for desktop */}
+          <div className="h-screen overflow-hidden bg-gradient-to-b from-background to-background/90 flex flex-row">
             {/* Upload Modal */}
             <UploadModal
               isOpen={isUploadModalOpen}
@@ -1534,7 +1533,7 @@ export default function AIExperiment() {
             {deleteConfirmation && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                 <div className="max-w-md w-full rounded-lg shadow-xl bg-card border border-border backdrop-blur-md"
-                     style={{ 
+                    style={{ 
                       background: 'linear-gradient(to bottom right, rgba(36, 36, 54, 0.95), rgba(28, 28, 42, 0.9))',
                       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
                     }}>
